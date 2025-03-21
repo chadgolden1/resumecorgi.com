@@ -1,4 +1,4 @@
-import { Experience, Education, Skill, FormData, Section } from "../types";
+import { Experience, Education, Skill, FormData, Section, GenericSection } from "../types";
 
 /**
  * Resume LaTeX Generator
@@ -210,6 +210,32 @@ ${this.utils.formatItemize(highlights, {vspaceBefore: '-9pt', vspaceAfter: '-3pt
 \\vspace{${isLastItem && highlights.length > 0 ? '-9pt' : '-3pt'}}`;
     }).join('\n\n');
   }
+
+  /**
+   * Formats a generic section
+   */
+  formatGenericSection(section: GenericSection): string {
+    if (!section || !section.items.length) {
+      return '';
+    }
+
+    const sectionHeading = `% ${section.title} section
+\\section*{${this.utils.escapeLaTeX(section.title)}}
+`;
+
+    return sectionHeading + section.items.map((item: { name: string; description: string; details: string }, index: number) => {
+      //const itemName = item.name || `Item \\#${index + 1}`;
+      const itemName = item.name.length > 0 ? `${this.utils.escapeLaTeX(item.name)}` : `Item \\#${index + 1}`;
+      const description = item.description.length > 0 ? `\\textbf{,} ${this.utils.escapeLaTeX(item.description)}` : ""
+      const nameLine = `\\textbf{${itemName}}${description} \\\\`;
+      const details = this.utils.extractBulletPoints(item.details);
+      const isLastItem = index === section.items.length - 1;
+      return `${nameLine}
+\\vspace{2pt}
+${this.utils.formatItemize(details, {vspaceBefore: '-12pt', vspaceAfter: '-3pt'})}
+\\vspace{${isLastItem && details.length > 0 ? '-9pt' : '-3pt'}}`;
+    }).join('\n\n');
+  }
 }
 
 // Template registry
@@ -302,6 +328,14 @@ class LaTeXResumeGenerator {
     const template = this.templateRegistry.get(templateName);
     const sortedSections = [...selectedSections].sort((a, b) => a.sortOrder - b.sortOrder);
     
+    // Register formatters for generic sections
+    if (formData.genericSections) {
+      Object.keys(formData.genericSections).forEach(sectionId => {
+        template.sectionFormatters[sectionId] = (data: GenericSection) => 
+          this.formatters.formatGenericSection(data);
+      });
+    }
+
     const name = formData.personalInfo.name || 'Your Name';
     
     const formatContacts = (contacts: string[]) => {
@@ -348,7 +382,15 @@ class LaTeXResumeGenerator {
       .filter(section => section.selected && template.sectionFormatters[section.id])
       .map((section, index) => {
         const formatter = template.sectionFormatters[section.id];
-        const sectionContent = formatter(formData[section.id as keyof FormData]);
+
+        let sectionContent: string = ""
+
+        if (section.id.includes("genericSection")) {
+          sectionContent = formatter(formData.genericSections[section.id as keyof FormData]);
+        }
+        else {
+          sectionContent = formatter(formData[section.id as keyof FormData]);
+        }
         
         // If not the first section and not empty, ensure consistent spacing
         if (index > 0 && sectionContent.trim().length > 0) {

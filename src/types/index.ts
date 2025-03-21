@@ -58,6 +58,15 @@ export interface Project {
   url: string;
 }
 
+export interface GenericSection {
+  title: string;
+  items: {
+    name: string;
+    description: string;
+    details: string;
+  }[];
+}
+
 export interface FormData {
   [key:string]: any;
   personalInfo: PersonalInfo;
@@ -65,6 +74,11 @@ export interface FormData {
   education: Education[];
   skills: Skill[];
   projects: Project[];
+  genericSections: { [key: string]: GenericSection };
+}
+
+export interface Removable {
+  removeable?: boolean;
 }
 
 export interface Sortable {
@@ -74,7 +88,7 @@ export interface Sortable {
   originalOrder?: number;
 }
 
-export interface NavSection extends Sortable {
+export interface NavSection extends Sortable, Removable {
   id: string;
   displayName: string;
   href: string;

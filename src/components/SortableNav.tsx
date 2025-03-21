@@ -19,21 +19,19 @@ import { NavSection } from '../types';
 
 interface SortableNavItemProps {
   id: string;
-  displayName: string;
-  href: string;
-  sortable: boolean;
-  required: boolean;
-  selected: boolean;
+  section: NavSection;
   onSelected: (sectionId: string) => void;
+  onRemoved: (sectionId: string) => void;
 }
 
 interface SortableNavProps {
   sections: NavSection[];
   handleMoveTo: (oldIndex: number, newIndex: number) => void;
   handleSelected: (sectionId: string, checked: boolean) => void;
+  handleRemoved: (sectionId: string) => void;
 }
 
-const SortableNavItem: React.FC<SortableNavItemProps> = ({ id, displayName, href, sortable, required, selected, onSelected }) => {
+const SortableNavItem: React.FC<SortableNavItemProps> = ({ id, section, onSelected, onRemoved }) => {
   const {
     attributes,
     listeners,
@@ -49,9 +47,9 @@ const SortableNavItem: React.FC<SortableNavItemProps> = ({ id, displayName, href
 
   const anchorCss = `w-full py-1 hover:underline`;
 
-  if (!sortable) {
+  if (!section.sortable) {
     return (
-      <div ref={setNodeRef} className={`relative block group/sections mb-[0.725rem]`}>
+      <div ref={setNodeRef} className={`relative block group/sections mb-[0.5rem]`}>
         <span className="
           absolute top-0 left-0 
           w-full h-full 
@@ -67,12 +65,12 @@ const SortableNavItem: React.FC<SortableNavItemProps> = ({ id, displayName, href
             bg-white dark:bg-zinc-700
             group-active/sections:bg-gray-100 dark:group-active/sections:bg-zinc-600
             relative w-full
-            ps-3 pe-1.5 py-1.5
+            ps-3 pe-1.5 py-1
             font-bold text-black dark:text-white
             border-1 border-black rounded-[0.45rem]
           `}>
           <div className="flex justify-between items-center w-full">
-            <a href={href} className={`${anchorCss}`}>{displayName}</a>
+            <a href={section.href} className={`${anchorCss}`}>{section.displayName || "Section"}</a>
             <div className="p-2 rounded-full invisible">
               <span>
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-4">
@@ -90,7 +88,7 @@ const SortableNavItem: React.FC<SortableNavItemProps> = ({ id, displayName, href
     <div 
       ref={setNodeRef} 
       style={style} 
-      className={`relative block group/sections mb-[0.725rem]`}
+      className={`relative block group/sections mb-[0.5rem]`}
     >
       <span className="
         absolute top-0 left-0 
@@ -107,26 +105,52 @@ const SortableNavItem: React.FC<SortableNavItemProps> = ({ id, displayName, href
           bg-white dark:bg-zinc-700
           group-active/sections:bg-gray-100 dark:group-active/sections:bg-zinc-600
           relative w-full
-          ps-3 pe-1.5 py-1.5
+          ps-3 pe-1.5 py-1
           font-bold text-black dark:text-white
           border-1 border-black rounded-[0.45rem]
         `}
       >
         <div className="flex justify-between items-center w-full">
-          <a href={href} className={`${anchorCss}`}>{displayName}</a>
+          <a href={section.href} className={`${anchorCss}`}>{section.displayName || "Section Title"}</a>
           
-          {!required && (
+          {section.removeable && (
+            <div
+              className="p-2 rounded-full hover:cursor-pointer"
+              onClick={() => onRemoved(id)}
+              tabIndex={0}
+              title={`Remove ${section.displayName}`}
+            >
+
+              <span className="sr-only">{`Remove ${section.displayName}`}</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="lucide lucide-eye size-4"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+              </svg>
+            </div>
+          )}
+
+          {!section.required && (
             <div 
               className="p-2 rounded-full hover:cursor-pointer"
               onClick={() => onSelected(id)}
               tabIndex={0}
-              title={selected ? `Hide ${displayName}` : `Show ${displayName}`}
+              title={section.selected ? `Hide ${section.displayName}` : `Show ${section.displayName}`}
             >
 
               <span className="sr-only">
-                {selected ? `Hide ${displayName}` : `Show ${displayName}`}
+                {section.selected ? `Hide ${section.displayName}` : `Show ${section.displayName}`}
               </span>
-              {selected && (
+              {section.selected && (
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -144,7 +168,7 @@ const SortableNavItem: React.FC<SortableNavItemProps> = ({ id, displayName, href
                 </svg>
               )}
 
-              {!selected && (
+              {!section.selected && (
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -166,14 +190,14 @@ const SortableNavItem: React.FC<SortableNavItemProps> = ({ id, displayName, href
             </div>
           )}
 
-          {sortable && (
+          {section.sortable && (
             <div 
               className="p-2 rounded-full hover:cursor-grab"
-              title={`Reorder ${displayName}`}
+              title={`Reorder ${section.displayName}`}
               {...listeners}
               {...attributes}
             >
-              <span className="sr-only">{`Reorder ${displayName}`}</span>
+              <span className="sr-only">{`Reorder ${section.displayName}`}</span>
               <svg 
                 xmlns="http://www.w3.org/2000/svg" 
                 fill="none" 
@@ -196,7 +220,7 @@ const SortableNavItem: React.FC<SortableNavItemProps> = ({ id, displayName, href
   );
 };
 
-const SortableNav: React.FC<SortableNavProps> = ({ sections, handleMoveTo, handleSelected }) => {
+const SortableNav: React.FC<SortableNavProps> = ({ sections, handleMoveTo, handleSelected, handleRemoved }) => {
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -232,12 +256,9 @@ const SortableNav: React.FC<SortableNavProps> = ({ sections, handleMoveTo, handl
             <SortableNavItem 
               key={section.id} 
               id={section.id} 
-              displayName={section.displayName} 
-              href={section.href} 
-              sortable={section.sortable}
-              required={section.required}
-              selected={section.selected}
+              section={section}
               onSelected={() => handleSelected(section.id, !section.selected)}
+              onRemoved={() => handleRemoved(section.id)}
             />
           ))}
         </div>

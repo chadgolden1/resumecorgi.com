@@ -32,6 +32,7 @@ function Input({
             name={formData.name}
             value={formData.value}
             onChange={handleChange}
+            autoComplete="off"
             className="relative w-full p-2 text-sm text-black dark:text-white 
                        bg-gray-50 dark:bg-zinc-800
                        border-1 border-gray-200 dark:border-zinc-700 rounded-lg

@@ -84,7 +84,7 @@ function Button({
       `
         bg-lime-200 dark:bg-lime-700
         group-hover/button:bg-lime-300 dark:group-hover/button:bg-lime-600
-        group-active/button:bg-lime-200 dark:group-active/button:bg-emerald-600
+        group-active/button:bg-lime-200 dark:group-active/button:bg-lime-600
         border-black 
         text-black dark:text-white
       `,

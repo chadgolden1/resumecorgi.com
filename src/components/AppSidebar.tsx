@@ -2,14 +2,16 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupConte
 import { NavSection } from "@/types";
 import SortableNav from "./SortableNav";
 import Footer from "./Footer";
-import { EraserIcon, FlaskConical } from "lucide-react";
+import { EraserIcon, FlaskConical, ListPlus } from "lucide-react";
 
 interface SidebarProps {
   sections: NavSection[];
   handleMoveTo: (oldIndex: number, newIndex: number) => void;
   handleSectionSelected: (sectionId: string, checked: boolean) => void;
+  handleSectionRemoved: (sectionId: string) => void;
   resetData?: () => void;
   sampleData?: () => void;
+  onAddGenericSection?: () => void;
 }
 
 const clearForm = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>, resetData?: () => void) => {
@@ -22,10 +24,10 @@ const loadSample = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>, sampleDa
   sampleData?.();
 }
 
-function AppSidebar({ sections, handleMoveTo, handleSectionSelected, resetData, sampleData }: SidebarProps) {
+function AppSidebar({ sections, handleMoveTo, handleSectionSelected, handleSectionRemoved, resetData, sampleData, onAddGenericSection }: SidebarProps) {
   return (
     <Sidebar className="border-r-0 border-t-0 border-gray-400 dark:border-zinc-700">
-      <SidebarContent className="mt-0 lg:mt-[75px] bg-gray-100 dark:bg-zinc-800/95 overflow-hidden">
+      <SidebarContent className="mt-0 lg:mt-[75px] bg-gray-100 dark:bg-zinc-800/95">
         <SidebarGroup className="block lg:hidden">
           <SidebarGroupContent>
             <SidebarTrigger className="
@@ -35,10 +37,26 @@ function AppSidebar({ sections, handleMoveTo, handleSectionSelected, resetData, 
         </SidebarGroup>
         <SidebarGroup>
           <SidebarGroupLabel className="text-gray-700 dark:text-zinc-300">Sections</SidebarGroupLabel>
-          <SidebarGroupContent>
+          <SidebarGroupContent className="overflow-hidden">
             <div className="px-2">
-              <SortableNav sections={sections} handleMoveTo={handleMoveTo} handleSelected={handleSectionSelected} />
+              <SortableNav sections={sections} handleMoveTo={handleMoveTo} handleSelected={handleSectionSelected} handleRemoved={handleSectionRemoved} />
             </div>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-gray-700 dark:text-zinc-300">Customization</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+                <SidebarMenuItem key={"new-custom-section"}>
+                  <SidebarMenuButton asChild className="hover:bg-gray-200 dark:hover:bg-zinc-700">
+                    <a href={`#`}
+                      onClick={(e) => { e.preventDefault(); onAddGenericSection?.() }}>
+                      <ListPlus />
+                      <span>New Section</span>
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+            </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
         <SidebarGroup>

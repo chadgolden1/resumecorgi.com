@@ -21,7 +21,8 @@ export const initialFormData: FormData = {
   experience: [],
   education: [],
   skills: [],
-  projects: []
+  projects: [],
+  genericSections: {}
 };
 
 export const sampleFormData: FormData = {
@@ -104,5 +105,20 @@ export const sampleFormData: FormData = {
       "highlights": "<ul><li>Developed comprehensive training curriculum</li><li>42 percent increase in voluntary sock donation</li><li>29 percent growth in successful acquisitions</li></ul>",
       "url": "https://www.royalcorgitrainingacademy.com"
     }
-  ]
+  ],
+  genericSections: {
+    hobbies: {
+      title: "Hobbies & Interests",
+      items: [
+        {
+          name: "Photography",
+          description: "Passionate about landscape and street photography, with experience in digital and film formats."
+        },
+        {
+          name: "Rock Climbing",
+          description: "Regular indoor climber and occasional outdoor climber, focusing on bouldering and sport climbing."
+        }
+      ]
+    }
+  }
 };

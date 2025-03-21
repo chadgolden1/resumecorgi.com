@@ -1,4 +1,4 @@
-import { JSX, useState, useEffect, useRef } from 'react';
+import { JSX, useState, useEffect, useRef, useMemo } from 'react';
 import Preview from './Preview';
 import PersonalInfo from './forms/PersonalInfo';
 import Experience from './forms/Experience';
@@ -15,6 +15,7 @@ import AppSidebar from '@/components/AppSidebar';
 import Navbar from '@/components/Navbar';
 import { initialFormData, sampleFormData } from '@/lib/DataInitializer';
 import Projects from './forms/Projects';
+import GenericSection from './forms/GenericSection';
 
 interface SectionRenderItem {
   id: string;
@@ -33,11 +34,6 @@ function Editor() {
   const [formData, setFormData] = useState<FormData>(savedFormData);
   const [sections, setSections] = useState<Section[]>(savedSections);
 
-  // Save data to localStorage whenever it changes
-  useEffect(() => {
-    saveToStorage({ formData, sections });
-  }, [formData, sections]);
-
   // Handle beforeunload event to remind users their data is saved
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -53,7 +49,44 @@ function Editor() {
     };
   }, []);
 
-  const sectionRenderMapping: SectionRenderItem[] = [
+  // Save data to localStorage whenever it changes
+  useEffect(() => {
+    saveToStorage({ formData, sections });
+  }, [formData, sections]);
+
+  const addGenericSection = () => {
+    const newSectionId = `genericSection${Object.keys(formData.genericSections || {}).length}`;
+    
+    // Update formData with new generic section
+    setFormData(prevData => ({
+      ...prevData,
+      genericSections: {
+        ...(prevData.genericSections || {}),
+        [newSectionId]: {
+          title: 'New Section',
+          items: []
+        }
+      }
+    }));
+
+    // Add section to sections list
+    setSections(prevSections => [
+      ...prevSections,
+      {
+        id: newSectionId,
+        displayName: 'New Section',
+        href: `#${newSectionId}`,
+        selected: true,
+        originalOrder: prevSections.length,
+        sortOrder: prevSections.length,
+        required: false,
+        sortable: true,
+        removeable: true,
+      }
+    ]);
+  };
+
+  const sectionRenderMapping = useMemo<SectionRenderItem[]>(() => [
     {
       id: 'personalInfo',
       title: 'About You',
@@ -104,14 +137,42 @@ function Editor() {
             <Projects projects={formData.projects} setFormData={setFormData} />
           </Card>
         </>
-    }
-  ];
+    },
+    // Add generic sections
+    ...(Object.entries(formData.genericSections || {}).map(([sectionId, section]) => ({
+      id: sectionId,
+      title: section.title,
+      renderFunc: () =>
+        <>
+          <Card>
+            <GenericSection
+              sectionId={sectionId}
+              section={section}
+              setFormData={setFormData}
+              onTitleChange={(title) => {
+                // When a generic section title changes, update the corresponding section's displayName
+                setSections(prevSections => {
+                  return prevSections.map(section => {
+                    if (section.id === sectionId) {
+                      return { ...section, displayName: title };
+                    }
+                    return section;
+                  });
+                });
+              }}
+            />
+          </Card>
+        </>
+    })))
+  ], [formData]); // Re-compute when formData changes
 
-  // Create a mapping of section IDs to their titles
-  const sectionTitles: Record<string, string> = sectionRenderMapping.reduce((acc, item) => {
-    acc[item.id] = item.title;
-    return acc;
-  }, {} as Record<string, string>);
+  // reactive mapping of section IDs to their titles
+  const sectionTitles = useMemo<Record<string, string>>(() => {
+    return sectionRenderMapping.reduce((acc, item) => {
+      acc[item.id] = item.title;
+      return acc;
+    }, {} as Record<string, string>);
+  }, [sectionRenderMapping]); // Re-compute when sectionRenderMapping changes
 
   const handleChange = (section: string, field: string, value: string): void => {
     setFormData(prevData => ({
@@ -125,6 +186,10 @@ function Editor() {
 
   const handleSectionSelected = (sectionId: string, checked: boolean): void => {
     setSections(prevSections => toggleSectionSelected(prevSections, sectionId, checked) as Section[]);
+  };
+
+  const handleSectionRemoved = (sectionId: string): void => {
+    setSections(prevSections => prevSections.filter(s => s.id !== sectionId));
   };
 
   const handleMoveTo = (oldIndex: number, newIndex: number): void => {
@@ -161,8 +226,10 @@ function Editor() {
           sections={sortedSections}
           handleMoveTo={handleMoveTo}
           handleSectionSelected={handleSectionSelected}
+          handleSectionRemoved={handleSectionRemoved}
           resetData={() => resetToDefaults() }
-          sampleData={() => resetToSampleData() } />
+          sampleData={() => resetToSampleData() }
+          onAddGenericSection={addGenericSection} />
         <div className="grid lg:grid-cols-12 grid-cols-12 gap-0 w-full h-screen">
           <div
             ref={formContainerRef}
