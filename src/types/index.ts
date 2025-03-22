@@ -13,6 +13,7 @@ declare global {
 export interface PdfTeXEngine {
   writeMemFSFile(fileName: string, compiledLaTeX: string): void;
   setEngineMainFile(fileName: string): void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   compileLaTeX(): Promise<any>;
   loadEngine: () => Promise<void>;
 }
@@ -68,6 +69,7 @@ export interface GenericSection {
 }
 
 export interface FormData {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key:string]: any;
   personalInfo: PersonalInfo;
   experience: Experience[];

@@ -7,8 +7,8 @@ import { createLaTeXFromFormData } from "../lib/LaTeXService";
 import { FormData, Section } from "../types";
 
 interface CompilationQueueItem {
-  resolve: (value: any) => void;
-  reject: (reason?: any) => void;
+  resolve: (value: unknown) => void;
+  reject: (reason?: unknown) => void;
 }
 
 interface PreviewState {
@@ -35,6 +35,7 @@ function Preview({ formData, selectedSections }: PreviewProps) {
   const canvasContainerRef = useRef<HTMLDivElement | null>(null);
   const lastEditTimeRef = useRef<number>(0);
   const inactivityTimerRef = useRef<number | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [localPreviewState, setLocalPreviewState] = useState<PreviewState>({
     formData: null,
     selectedSections: null,
@@ -44,7 +45,7 @@ function Preview({ formData, selectedSections }: PreviewProps) {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [pdfBuffer, setPdfBuffer] = useState<ArrayBuffer | null>(null);
-  const [pdfDoc, setPdfDoc] = useState<any>(null);
+  const [pdfDoc, setPdfDoc] = useState<unknown>(null);
   const [pageRendered, setPageRendered] = useState<boolean>(false);
   const [pageRendering, setPageRendering] = useState<boolean>(false);
   const [pageNumPending, setPageNumPending] = useState<number | null>(null);
@@ -176,7 +177,7 @@ function Preview({ formData, selectedSections }: PreviewProps) {
     };
   }, [formData, selectedSections, compiledLaTeX, pageRendered, canvasWidthPx]);
 
-  const compileLaTeX = async (): Promise<any> => {
+  const compileLaTeX = async (): Promise<unknown> => {
     // Queue the compilation request and wait for it to process
     return new Promise((resolve, reject) => {
       compilationQueue.current.push({ resolve, reject });
@@ -264,10 +265,11 @@ function Preview({ formData, selectedSections }: PreviewProps) {
         isProcessing.current = false;
         processQueue();
       });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       if (mounted) {
         console.error("Failed to compile LaTeX:", err);
-        setError(`Failed to compile LaTeX: ${err.message}`);
+        setError(`Failed to compile LaTeX: ${err?.message}`);
         setIsLoading(false);
       }
       
@@ -279,6 +281,7 @@ function Preview({ formData, selectedSections }: PreviewProps) {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const renderPage = (pdf: any, pageNum: number): void => {
     if (pageRendering) {
       setPageNumPending(pageNum);
@@ -288,6 +291,7 @@ function Preview({ formData, selectedSections }: PreviewProps) {
     setPageRendering(true);
     
     // Using promise to fetch the page
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     pdf.getPage(pageNum).then((page: any) => {
       // Use the hidden active canvas for rendering
       const canvas = activeCanvasRef.current;

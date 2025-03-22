@@ -1,4 +1,4 @@
-import { Experience, Education, Skill, FormData, Section, GenericSection } from "../types";
+import { Experience, Education, Skill, FormData, Section, GenericSection, Project } from "../types";
 
 /**
  * Resume LaTeX Generator
@@ -13,7 +13,6 @@ export interface TemplateConfig {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-// @ts-expect-error
 export type SectionFormatter = (data: any, options?: any) => string;
 
 class LaTeXUtils {
@@ -59,9 +58,6 @@ ${items}
       : "";
   }
   
-  /**
-   * Escape LaTeX special characters
-   */
   escapeLaTeX(text: string): string {
     return text
       // Handle LaTeX special characters
@@ -69,15 +65,16 @@ ${items}
       .replace(/[&%$#_{}]/g, '\\$&')
       .replace(/\^/g, '\\textasciicircum{}')
       .replace(/~/g, '\\textasciitilde{}')
+      // Handle brackets
+      .replace(/</g, '\\textless{}')
+      .replace(/>/g, '\\textgreater{}')
       // Handle non-breaking space and other special spaces
       .replace(/[\u00A0\u1680\u180e\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, ' ')
       // Handle other special Unicode characters
       .replace(/[\u2018\u2019]/g, "'")
       .replace(/[\u201C\u201D]/g, '"')
       .replace(/[\u2013\u2014]/g, '-')
-      .replace(/[\u2026]/g, '...')
-      // Remove any other non-ASCII characters that might cause issues
-      .replace(/[^\x00-\x7F]/g, '');
+      .replace(/[\u2026]/g, '...');
   }
 }
 
@@ -184,7 +181,7 @@ ${this.utils.formatItemize(accomplishments, {vspaceBefore: '-9pt', vspaceAfter: 
   /**
    * Formats projects section (example of adding a new section)
    */
-  formatProjects(projects?: any[]): string {
+  formatProjects(projects?: Project[]): string {
     if (!projects || !projects.length) {
       return '';
     }
