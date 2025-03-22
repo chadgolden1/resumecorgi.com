@@ -1,3 +1,4 @@
+import React from "react";
 import Input from "@/components/Input";
 import Button from "@/components/Button";
 import Separator from "@/components/Separator";
@@ -24,14 +25,6 @@ function Projects({ projects = [], setFormData }: ProjectsProps) {
     }));
   };
 
-  const updateProject = (index: number, project: Project) => {  
-    setFormData(prevData => ({
-      ...prevData,
-      projects: prevData.projects.map((p, i) => i === index ? project : p)
-    }));
-  };
-  
-  
   return (
     <>
       <div className="flex items-center -mt-1 mb-2">

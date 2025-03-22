@@ -36,7 +36,7 @@ function Editor() {
 
   // Handle beforeunload event to remind users their data is saved
   useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+    const handleBeforeUnload = (/*e: BeforeUnloadEvent*/) => {
       // No need to show a warning since data is saved
       // e.preventDefault();
       // e.returnValue = '';
