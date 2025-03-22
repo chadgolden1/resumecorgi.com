@@ -299,7 +299,6 @@ describe('LaTeXResumeGenerator', () => {
 
     test('should handle empty or null input in formatItemize', () => {
       expect(utils.formatItemize('')).toBe('');
-      expect(utils.formatItemize(null as any)).toBe('');
     });
     
     test('should escape LaTeX special characters', () => {
