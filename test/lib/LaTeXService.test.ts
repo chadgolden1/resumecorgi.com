@@ -284,6 +284,23 @@ describe('LaTeXResumeGenerator', () => {
       expect(result).toContain('\\item Test bullet 1');
       expect(result).toContain('\\item Test bullet 2');
     });
+
+    test('should format itemize environment with custom spacing', () => {
+      const items = '\\item Test 1\n\\item Test 2';
+      const result = utils.formatItemize(items, { vspaceBefore: '-12pt', vspaceAfter: '-6pt' });
+      
+      expect(result).toContain('\\begin{itemize}');
+      expect(result).toContain('\\vspace{-12pt}');
+      expect(result).toContain('\\item Test 1');
+      expect(result).toContain('\\item Test 2');
+      expect(result).toContain('\\end{itemize}');
+      expect(result).toContain('\\vspace{-6pt}');
+    });
+
+    test('should handle empty or null input in formatItemize', () => {
+      expect(utils.formatItemize('')).toBe('');
+      expect(utils.formatItemize(null as any)).toBe('');
+    });
     
     test('should escape LaTeX special characters', () => {
       const text = 'Special chars: & % $ # _ { } ^ ~';
@@ -299,6 +316,205 @@ describe('LaTeXResumeGenerator', () => {
       expect(result).toContain('\\}');
       expect(result).toContain('\\textasciicircum{}');
       expect(result).toContain('\\textasciitilde{}');
+    });
+
+    test('should handle Unicode characters in escapeLaTeX', () => {
+      const text = 'Math: ± × ÷ ≤ ≥ ≠ ∞ π\nAccents: é è ê ë á à â ä ñ\nQuotes: " " \'\nDashes: — –';
+      const result = utils.escapeLaTeX(text);
+      
+      expect(result).toContain('$\\pm$');
+      expect(result).toContain('$\\times$');
+      expect(result).toContain('$\\div$');
+      expect(result).toContain('$\\leq$');
+      expect(result).toContain('$\\geq$');
+      expect(result).toContain('$\\neq$');
+      expect(result).toContain('$\\infty$');
+      expect(result).toContain('$\\pi$');
+      expect(result).toContain('\\\'e');
+      expect(result).toContain('\\`e');
+      expect(result).toContain('\\^e');
+      expect(result).toContain('\\\'a');
+      expect(result).toContain('\\`a');
+      expect(result).toContain('\\^a');
+      expect(result).toContain('\\~n');
+      expect(result).toContain('``');
+      expect(result).toContain('---');
+      expect(result).toContain('--');
+    });
+  });
+
+  describe('Section Formatters', () => {
+    test('should format summary section', () => {
+      const formData = {
+        ...mockFormData,
+        personalInfo: {
+          ...mockFormData.personalInfo,
+          summary: 'Test summary with special chars: & % $'
+        }
+      };
+      
+      const result = latexGenerator.generateLaTeX(formData, [
+        {
+          id: 'summary',
+          selected: true,
+          sortOrder: 0,
+          displayName: 'Summary',
+          href: '#summary',
+          originalOrder: 0,
+          required: false,
+          sortable: false
+        }
+      ]);
+      
+      expect(result).toContain('\\section*{Summary}');
+      expect(result).toContain('Test summary with special chars: \\& \\% \\$');
+    });
+
+    test('should format projects section', () => {
+      const formData = {
+        ...mockFormData,
+        projects: [
+          {
+            name: 'Test Project',
+            description: 'Project description',
+            startDate: '2020',
+            endDate: '2021',
+            highlights: '<ul><li>Highlight 1</li><li>Highlight 2</li></ul>',
+            url: 'https://github.com/test/project'
+          }
+        ]
+      };
+      
+      const result = latexGenerator.generateLaTeX(formData, [
+        {
+          id: 'projects',
+          selected: true,
+          sortOrder: 0,
+          displayName: 'Projects',
+          href: '#projects',
+          originalOrder: 0,
+          required: false,
+          sortable: false
+        }
+      ]);
+      
+      expect(result).toContain('\\section*{Projects}');
+      expect(result).toContain('\\textbf{Test Project}');
+      expect(result).toContain('\\textit{Project description}');
+      expect(result).toContain('2020 -- 2021');
+      expect(result).toContain('\\href{https://github.com/test/project}');
+      expect(result).toContain('\\item Test bullet 1');
+      expect(result).toContain('\\item Test bullet 2');
+    });
+
+    test('should format generic section', () => {
+      const mockFormData: FormData = {
+        personalInfo: {
+          name: 'John Doe',
+          contact0: 'john@example.com',
+          contact1: 'linkedin.com/in/johndoe',
+          contact2: '',
+          contact3: '',
+          contact4: '',
+          summary: 'Experienced developer'
+        },
+        experience: [
+          {
+            title: 'Senior Developer',
+            company: 'Tech Inc.',
+            start: '2020',
+            end: 'Present',
+            accomplishments: '<ul><li>Led team</li><li>Improved performance</li></ul>'
+          }
+        ],
+        education: [
+          {
+            degree: 'BS Computer Science',
+            institution: 'University',
+            graduationDate: '2018',
+            location: 'New York',
+            gpa: '3.8',
+            accomplishments: '<ul><li>Dean\'s List</li></ul>'
+          }
+        ],
+        skills: [
+          {
+            category: 'Programming',
+            skillList: 'JavaScript, TypeScript'
+          }
+        ],
+        projects: [],
+        genericSections: {
+          "genericSection0": {
+            title: 'Custom Section',
+            items: [
+              {
+                name: 'Item 1',
+                description: 'Description 1',
+                details: '<ul><li></li></ul>'
+              },
+              {
+                name: 'Item 2',
+                description: 'Description 2',
+                details: '<ul><li></li></ul>'
+              },
+          ]}
+        }
+      };
+      
+      const result = latexGenerator.generateLaTeX(mockFormData, [
+        {
+          id: 'genericSection0',
+          selected: true,
+          sortOrder: 0,
+          displayName: 'Custom Section',
+          href: '#customSection',
+          originalOrder: 0,
+          required: false,
+          sortable: false
+        }
+      ]);
+      
+      expect(result).toContain('\\section*{Custom Section}');
+      expect(result).toContain('\\textbf{Item 1}');
+      expect(result).toContain('\\textbf{,} Description 1');
+      expect(result).toContain('\\textbf{Item 2}');
+      expect(result).toContain('\\textbf{,} Description 2');
+    });
+  });
+
+  describe('Template Registry', () => {
+    test('should handle template registration and retrieval', () => {
+      const testTemplate = {
+        preamble: '\\documentclass{article}',
+        documentHeader: () => '\\begin{document}',
+        sectionFormatters: {},
+        documentFooter: '\\end{document}'
+      };
+      
+      latexGenerator.registerTemplate('test-template', testTemplate);
+      const templates = latexGenerator.getAvailableTemplates();
+      
+      expect(templates).toContain('test-template');
+      
+      // Test adding a section formatter to the template
+      const testFormatter: SectionFormatter = () => 'TEST_SECTION';
+      latexGenerator.addSectionFormatter('test-template', 'test-section', testFormatter);
+      
+      const result = latexGenerator.generateLaTeX(mockFormData, [
+        {
+          id: 'test-section',
+          selected: true,
+          sortOrder: 0,
+          displayName: 'Test Section',
+          href: '#test-section',
+          originalOrder: 0,
+          required: false,
+          sortable: false
+        }
+      ], 'test-template');
+      
+      expect(result).toContain('TEST_SECTION');
     });
   });
 });
