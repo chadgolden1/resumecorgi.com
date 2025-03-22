@@ -1,3 +1,4 @@
+import React from "react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarTrigger } from "@/components/ui/sidebar"
 import { NavSection } from "@/types";
 import SortableNav from "./SortableNav";

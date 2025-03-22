@@ -12,6 +12,8 @@ export interface TemplateConfig {
   documentFooter: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// @ts-expect-error
 export type SectionFormatter = (data: any, options?: any) => string;
 
 class LaTeXUtils {

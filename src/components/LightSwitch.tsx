@@ -23,6 +23,7 @@ function LightSwitch() {
   }, [currentTheme]);
 
   useEffect(() => {
+    const themes: Theme[] = ['system', 'light', 'dark'];
     const savedTheme = localStorage.getItem('theme') as Theme | null;
     if (savedTheme && themes.includes(savedTheme)) {
       setCurrentTheme(savedTheme);
