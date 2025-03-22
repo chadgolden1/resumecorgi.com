@@ -18,7 +18,27 @@ on:
   workflow_dispatch:
 
 jobs:
+  validate:
+    runs-on: ubuntu-latest
+    name: Validate
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+
+      - name: Restore Dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run Tests
+        run: npm test
+
   build:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     name: Build
     steps:
@@ -31,24 +51,20 @@ jobs:
       - name: Restore Dependencies
         run: npm ci
 
-      - name: Run Tests
-        run: npm test
-
       - name: Build
         run: npm run build
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
-        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         with:
           name: resumecorgi.com
           path: dist/
 
   deploy-cloudflare:
-    needs: [ build ]
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    needs: [ build, validate ]
     runs-on: ubuntu-latest
     name: Deploy (Cloudflare)
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Download Artifact
         uses: actions/download-artifact@v4
