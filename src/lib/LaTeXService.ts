@@ -439,9 +439,4 @@ class LaTeXResumeGenerator {
 // Export the generator
 export const latexGenerator = new LaTeXResumeGenerator();
 
-// Backward compatibility for legacy code
-export function createLaTeXFromFormData(formData: FormData, selectedSections: Section[]): string {
-  return latexGenerator.generateLaTeX(formData, selectedSections);
-}
-
 export { LaTeXUtils, SectionFormatters };

@@ -3,7 +3,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 import EngineManager from "../lib/EngineManager";
 import Skeleton from "../components/Skeleton";
 import Toolbar from "../components/Toolbar";
-import { createLaTeXFromFormData } from "../lib/LaTeXService";
+import { latexGenerator } from "../lib/LaTeXService";
 import { FormData, Section } from "../types";
 
 interface CompilationQueueItem {
@@ -61,7 +61,7 @@ function Preview({ formData, selectedSections }: PreviewProps) {
 
   // Use memoized LaTeX to avoid recreating it on every render
   const compiledLaTeX = useMemo(() => {
-    let laTeX = createLaTeXFromFormData(formData, selectedSections);
+    let laTeX = latexGenerator.generateLaTeX(formData, selectedSections);
     return laTeX;
   }, [formData, selectedSections]);
 

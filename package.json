@@ -45,6 +45,7 @@
     "autoprefixer": "^10.4.20",
     "decompress": "^4.2.1",
     "eslint": "^9.21.0",
+    "eslint-plugin-jest": "^28.11.0",
     "eslint-plugin-react-hooks": "^5.1.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^15.15.0",

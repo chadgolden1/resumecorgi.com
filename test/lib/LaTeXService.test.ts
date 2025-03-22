@@ -301,18 +301,4 @@ describe('LaTeXResumeGenerator', () => {
       expect(result).toContain('\\textasciitilde{}');
     });
   });
-
-  describe('Backward compatibility', () => {
-    test('should maintain compatibility with original function', () => {
-      // Import the compatibility function
-      const { createLaTeXFromFormData } = require('../../src/lib/LaTeXService');
-      
-      // Generate LaTeX using both methods
-      const newResult = latexGenerator.generateLaTeX(mockFormData, mockSections);
-      const compatResult = createLaTeXFromFormData(mockFormData, mockSections);
-      
-      // Results should be identical
-      expect(compatResult).toBe(newResult);
-    });
-  });
 });
