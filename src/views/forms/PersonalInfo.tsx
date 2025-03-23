@@ -6,7 +6,7 @@ import Button from '../../components/Button';
 
 interface PersonalInfoProps {
   personalInfo: PersonalInfoData;
-  handleChange: (section: string, field: string, value: any) => void;
+  handleChange: (section: string, field: string, value: string | string[]) => void;
 }
 
 function PersonalInfo({ personalInfo, handleChange }: PersonalInfoProps) {
@@ -42,36 +42,45 @@ function PersonalInfo({ personalInfo, handleChange }: PersonalInfoProps) {
         handleChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('personalInfo', 'name', e.target.value)} 
       />
 
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Contacts</h3>
-          <Button
-            theme="interaction"
-            onClick={addContact}
-            text="Add Contact"
-          />
+      <div className="space-y-5">
+        <div className={ personalInfo.contacts?.length || 0 > 0 ? "mb-3" : "mb-1" }>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Contact Information</h3>
         </div>
-        
-        {(personalInfo.contacts || []).map((contact, index) => (
-          <div key={index} className="flex items-center gap-2">
-            <Input 
-              type="text" 
-              label={`Contact #${index + 1}`}
-              formData={{ 
-                id: `contact${index}`, 
-                name: `contact${index}`, 
-                value: contact 
-              }} 
-              handleChange={(e: React.ChangeEvent<HTMLInputElement>) => updateContact(index, e.target.value)} 
+
+        <div className={ personalInfo.contacts?.length || 0 > 0 ? "mb-3" : "mb-0" }>
+          {(personalInfo.contacts || []).map((contact, index) => (
+            <div key={index} className="flex items-center gap-2 mb-0 w-full border-l-3 border-l-gray-200 dark:border-l-zinc-700">
+              <Input
+                containerClassName="ms-3 w-full"
+                type="text" 
+                label={`Contact #${index + 1}`}
+                formData={{ 
+                  id: `contact${index}`, 
+                  name: `contact${index}`, 
+                  value: contact 
+                }} 
+                handleChange={(e: React.ChangeEvent<HTMLInputElement>) => updateContact(index, e.target.value)} 
+              />
+              <span className="relative top-[6px]">
+                <Button
+                  theme="danger"
+                  onClick={() => removeContact(index)}
+                  className="text-sm py-2"
+                  text="Remove"
+                />
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <div className="mb-4" hidden={(personalInfo.contacts?.length || 0) >= 6}>
+          <Button
+              theme="success"
+              className="text-sm"
+              onClick={addContact}
+              text="Add Contact"
             />
-            <Button
-              theme="danger"
-              onClick={() => removeContact(index)}
-              className="mt-6"
-              text="Remove"
-            />
-          </div>
-        ))}
+        </div>
       </div>
 
       <Textbox 

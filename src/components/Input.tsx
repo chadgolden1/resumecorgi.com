@@ -7,6 +7,7 @@ interface FormDataInput {
 }
 
 interface InputProps {
+  containerClassName?: string;
   type?: string;
   label: string;
   placeholder?: string;
@@ -15,6 +16,7 @@ interface InputProps {
 }
 
 function Input({
+  containerClassName = "",
   type = "text",
   label,
   placeholder = "",
@@ -23,7 +25,7 @@ function Input({
 }: InputProps) {
   return(
     <>
-      <div>
+      <div className={containerClassName}>
         <label htmlFor={formData.id} className="block text-sm text-gray-800 dark:text-zinc-200 mb-1">{ label }</label>
         <div className="relative inline-block w-full group mb-3">
           <input

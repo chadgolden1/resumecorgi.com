@@ -367,7 +367,9 @@ class LaTeXResumeGenerator {
     const formatContacts = (contacts: string[]) => {
       if (!contacts.length) return '';
 
-      const items = contacts.map(c => `\\href{${this.utils.getHref(this.utils.escapeLaTeX(c))}}{${this.utils.escapeLaTeX(c)}}`);
+      const items = contacts
+        .filter(c => c && c.length > 0)
+        .map(c => `\\href{${this.utils.getHref(this.utils.escapeLaTeX(c))}}{${this.utils.escapeLaTeX(c)}}`);
       const MAX_ITEMS_PER_LINE = 3;
       let result = [];
 
