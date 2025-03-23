@@ -384,19 +384,11 @@ class LaTeXResumeGenerator {
       `;
     };
 
-    const contacts = [
-      formData.personalInfo.contact0,
-      formData.personalInfo.contact1,
-      formData.personalInfo.contact2,
-      formData.personalInfo.contact3,
-      formData.personalInfo.contact4
-    ].filter(Boolean);
-
-    const contactLine = formatContacts(contacts);
+    const contacts = formatContacts(formData.personalInfo.contacts || []);
 
     // Start building document
     let output = template.preamble;
-    output += template.documentHeader(name, contactLine);
+    output += template.documentHeader(name, contacts);
 
     // Add summary if included
     if (formData.personalInfo.summary) {

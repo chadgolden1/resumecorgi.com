@@ -20,11 +20,7 @@ export interface PdfTeXEngine {
 
 export interface PersonalInfo {
   name: string;
-  contact0: string;
-  contact1: string;
-  contact2: string;
-  contact3: string;
-  contact4: string; // TODO, refactor into JSON resume well-knonw schema array format, etc.
+  contacts: string[];
   summary: string;
 }
 

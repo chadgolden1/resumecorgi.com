@@ -2,13 +2,30 @@ import React from 'react';
 import Input from '../../components/Input';
 import Textbox from '../../components/Textbox';
 import { PersonalInfo as PersonalInfoData } from '../../types';
+import Button from '../../components/Button';
 
 interface PersonalInfoProps {
   personalInfo: PersonalInfoData;
-  handleChange: (section: string, field: string, value: string) => void;
+  handleChange: (section: string, field: string, value: any) => void;
 }
 
 function PersonalInfo({ personalInfo, handleChange }: PersonalInfoProps) {
+  const addContact = () => {
+    const newContacts = [...(personalInfo.contacts || []), ''];
+    handleChange('personalInfo', 'contacts', newContacts);
+  };
+
+  const removeContact = (index: number) => {
+    const newContacts = personalInfo.contacts.filter((_, i) => i !== index);
+    handleChange('personalInfo', 'contacts', newContacts);
+  };
+
+  const updateContact = (index: number, value: string) => {
+    const newContacts = [...personalInfo.contacts];
+    newContacts[index] = value;
+    handleChange('personalInfo', 'contacts', newContacts);
+  };
+
   return (
     <>
       <div className="flex items-center -mt-1">
@@ -24,36 +41,39 @@ function PersonalInfo({ personalInfo, handleChange }: PersonalInfoProps) {
         formData={{ id: "name", name: "name", value: personalInfo.name}} 
         handleChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('personalInfo', 'name', e.target.value)} 
       />
-      <Input 
-        type="text" 
-        label="Contact #1" 
-        formData={{ id: "contact0", name: "contact0", value: personalInfo.contact0 }} 
-        handleChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('personalInfo', 'contact0', e.target.value)} 
-      />
-      <Input 
-        type="text" 
-        label="Contact #2 (optional)" 
-        formData={{ id: "contact1", name: "contact1", value: personalInfo.contact1 }} 
-        handleChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('personalInfo', 'contact1', e.target.value)} 
-      />
-      <Input 
-        type="text" 
-        label="Contact #3 (optional)" 
-        formData={{ id: "contact2", name: "contact2", value: personalInfo.contact2 }} 
-        handleChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('personalInfo', 'contact2', e.target.value)} 
-      />
-      <Input 
-        type="text" 
-        label="Contact #4 (optional)" 
-        formData={{ id: "contact3", name: "contact3", value: personalInfo.contact3 }} 
-        handleChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('personalInfo', 'contact3', e.target.value)} 
-      />
-      <Input 
-        type="text" 
-        label="Contact #5 (optional)" 
-        formData={{ id: "contact4", name: "contact4", value: personalInfo.contact4 }} 
-        handleChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('personalInfo', 'contact4', e.target.value)} 
-      />
+
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Contacts</h3>
+          <Button
+            theme="interaction"
+            onClick={addContact}
+            text="Add Contact"
+          />
+        </div>
+        
+        {(personalInfo.contacts || []).map((contact, index) => (
+          <div key={index} className="flex items-center gap-2">
+            <Input 
+              type="text" 
+              label={`Contact #${index + 1}`}
+              formData={{ 
+                id: `contact${index}`, 
+                name: `contact${index}`, 
+                value: contact 
+              }} 
+              handleChange={(e: React.ChangeEvent<HTMLInputElement>) => updateContact(index, e.target.value)} 
+            />
+            <Button
+              theme="danger"
+              onClick={() => removeContact(index)}
+              className="mt-6"
+              text="Remove"
+            />
+          </div>
+        ))}
+      </div>
+
       <Textbox 
         rows={3} 
         label={"Summary (optional)"} 

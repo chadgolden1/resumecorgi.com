@@ -20,11 +20,7 @@ describe('LaTeXResumeGenerator', () => {
   const mockFormData: FormData = {
     personalInfo: {
       name: 'John Doe',
-      contact0: 'john@example.com',
-      contact1: 'linkedin.com/in/johndoe',
-      contact2: '',
-      contact3: '',
-      contact4: '',
+      contacts: ['john@example.com', 'linkedin.com/in/johndoe'],
       summary: 'Experienced developer'
     },
     experience: [
@@ -410,11 +406,7 @@ describe('LaTeXResumeGenerator', () => {
       const mockFormData: FormData = {
         personalInfo: {
           name: 'John Doe',
-          contact0: 'john@example.com',
-          contact1: 'linkedin.com/in/johndoe',
-          contact2: '',
-          contact3: '',
-          contact4: '',
+          contacts: ['john@example.com', 'linkedin.com/in/johndoe'],
           summary: 'Experienced developer'
         },
         experience: [
