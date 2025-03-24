@@ -26,7 +26,7 @@ function Button({
       `,
     interaction:
       `
-        bg-black dark:bg-zinc-700
+        bg-black
       `,
     danger:
       `
@@ -34,19 +34,18 @@ function Button({
       `,
     "danger-outline":
       `
-        bg-black dark:bg-zinc-700
+        bg-black
       `,
     success:
       `
-        bg-black /dark:bg-zinc-700
+        bg-black
       `,
     warning:
       `
-        bg-black dark:bg-zinc-700
+        bg-black
       `
   }
-
-
+  
   const themeClasses = {
     default:
       `

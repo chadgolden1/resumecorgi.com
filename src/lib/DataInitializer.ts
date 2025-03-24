@@ -5,8 +5,36 @@ export const initialSections: Section[] = [
   { id: 'experience', displayName: 'Experience', href: '#experience', selected: true, originalOrder: 1, sortOrder: 1, required: false, sortable: true },
   { id: 'education', displayName: 'Education', href: '#education', selected: true, originalOrder: 2, sortOrder: 2, required: false, sortable: true },
   { id: 'skills', displayName: 'Skills', href: '#skills', selected: true, originalOrder: 3, sortOrder: 3, required: false, sortable: true },
-  //{ id: 'projects', displayName: 'Projects', href: '#projects', selected: true, originalOrder: 4, sortOrder: 4, required: false, sortable: true },
+  { id: 'projects', displayName: 'Projects', href: '#projects', selected: true, originalOrder: 4, sortOrder: 4, required: false, sortable: true },
 ];
+
+export const createSectionsFromFormData = (formData: FormData): Section[] => {
+  const defaultSections = [...initialSections];
+  
+  if (formData.genericSections) {
+    let orderIndex = defaultSections.length;
+    
+    Object.keys(formData.genericSections).forEach(key => {
+      const section = formData.genericSections?.[key];
+      if (section && section.items.length > 0) {
+        defaultSections.push({
+          id: key,
+          displayName: section.title,
+          href: `#${key}`,
+          selected: true,
+          originalOrder: orderIndex,
+          sortOrder: orderIndex,
+          required: false,
+          sortable: true,
+          removeable: true
+        });
+        orderIndex++;
+      }
+    });
+  }
+  
+  return defaultSections;
+};
 
 export const initialFormData: FormData = {
   personalInfo: {
@@ -102,19 +130,4 @@ export const sampleFormData: FormData = {
       "url": "https://www.royalcorgitrainingacademy.com"
     }
   ],
-  genericSections: {
-    hobbies: {
-      title: "Hobbies & Interests",
-      items: [
-        {
-          name: "Photography",
-          description: "Passionate about landscape and street photography, with experience in digital and film formats."
-        },
-        {
-          name: "Rock Climbing",
-          description: "Regular indoor climber and occasional outdoor climber, focusing on bouldering and sport climbing."
-        }
-      ]
-    }
-  }
 };

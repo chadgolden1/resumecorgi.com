@@ -405,7 +405,7 @@ class LaTeXResumeGenerator {
 
         let sectionContent: string = ""
 
-        if (section.id.includes("genericSection") && formData.genericSections) {
+        if (Object.keys(formData.genericSections || {}).includes(section.id) && formData.genericSections) {
           sectionContent = formatter(formData.genericSections[section.id as keyof FormData]);
         }
         else {

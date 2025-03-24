@@ -13,9 +13,10 @@ import { moveTo, toggleSectionSelected } from '../lib/SortService';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/AppSidebar';
 import Navbar from '@/components/Navbar';
-import { initialFormData, sampleFormData } from '@/lib/DataInitializer';
+import { createSectionsFromFormData, initialFormData, sampleFormData } from '@/lib/DataInitializer';
 import Projects from './forms/Projects';
 import GenericSection from './forms/GenericSection';
+import { downloadResumeAsJson } from '@/lib/ImportExportService';
 
 interface SectionRenderItem {
   id: string;
@@ -174,7 +175,7 @@ function Editor() {
     }, {} as Record<string, string>);
   }, [sectionRenderMapping]); // Re-compute when sectionRenderMapping changes
 
-  const handleChange = (section: string, field: string, value: string): void => {
+  const handleChange = (section: string, field: string, value: string | string[]): void => {
     setFormData(prevData => ({
       ...prevData,
       [section]: {
@@ -212,6 +213,14 @@ function Editor() {
     }
   }
 
+  const loadImportedJsonResume = (importedFormData: FormData) => {
+    if (window.confirm('Loading imported resume data will overwrite any edits you have made. This cannot be undone. Would you like to proceed?')) {
+      const { formData: targetFormData, sections: targetSections } = clearStorage(importedFormData, createSectionsFromFormData(importedFormData));
+      setFormData(targetFormData);
+      setSections(targetSections);
+    }
+  };
+
   const sortedSections = [...sections].sort((a, b) => a.sortOrder - b.sortOrder);
 
   return (
@@ -229,7 +238,9 @@ function Editor() {
           handleSectionRemoved={handleSectionRemoved}
           resetData={() => resetToDefaults() }
           sampleData={() => resetToSampleData() }
-          onAddGenericSection={addGenericSection} />
+          onAddGenericSection={addGenericSection}
+          onExport={() => downloadResumeAsJson(formData) }
+          onImportJsonFormData={formData => loadImportedJsonResume(formData) } />
         <div className="grid lg:grid-cols-12 grid-cols-12 gap-0 w-full h-screen">
           <div
             ref={formContainerRef}

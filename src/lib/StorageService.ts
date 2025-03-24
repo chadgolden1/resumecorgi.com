@@ -49,7 +49,7 @@ export const saveToStorage = (data: StoredData): void => {
  * Clear all stored data and return to initial defaults
  * @returns Object containing initial formData and sections
  */
-export const clearStorage = (targetFormData: FormData = initialFormData): StoredData => {
+export const clearStorage = (targetFormData: FormData = initialFormData, targetSections: Section[] = initialSections): StoredData => {
   try {
     localStorage.removeItem(STORAGE_KEY);
   } catch (error) {
@@ -58,6 +58,6 @@ export const clearStorage = (targetFormData: FormData = initialFormData): Stored
   
   return {
     formData: targetFormData,
-    sections: initialSections
+    sections: targetSections
   };
 };
