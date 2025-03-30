@@ -1,5 +1,5 @@
 import { loadFromStorage, saveToStorage, clearStorage, STORAGE_KEY } from '../../src/lib/StorageService';
-import { initialFormData, initialSections } from '../../src/lib/DataInitializer';
+import { initialFormData, initialSections, initialTemplateId } from '../../src/lib/DataInitializer';
 
 // Mock localStorage
 const localStorageMock = (() => {
@@ -38,7 +38,8 @@ describe('StorageService', () => {
       // Assert
       expect(result).toEqual({
         formData: initialFormData,
-        sections: initialSections
+        sections: initialSections,
+        templateId: initialTemplateId
       });
       expect(localStorageMock.getItem).toHaveBeenCalledWith(STORAGE_KEY);
     });
@@ -54,7 +55,8 @@ describe('StorageService', () => {
         },
         sections: [
           { id: 'test-section', displayName: 'Test Section', href: '/test', selected: true, originalOrder: 0, sortOrder: 0, required: true, sortable: true }
-        ]
+        ],
+        templateId: initialTemplateId
       };
       localStorageMock.getItem.mockReturnValueOnce(JSON.stringify(mockData));
 
@@ -79,7 +81,8 @@ describe('StorageService', () => {
       // Assert
       expect(result).toEqual({
         formData: initialFormData,
-        sections: initialSections
+        sections: initialSections,
+        templateId: initialTemplateId
       });
       expect(consoleSpy).toHaveBeenCalledWith('Error loading data from localStorage:', expect.any(Error));
       consoleSpy.mockRestore();
@@ -96,7 +99,8 @@ describe('StorageService', () => {
       // Assert
       expect(result).toEqual({
         formData: initialFormData,
-        sections: initialSections
+        sections: initialSections,
+        templateId: initialTemplateId
       });
     });
   });
@@ -106,7 +110,8 @@ describe('StorageService', () => {
       // Arrange
       const mockData = {
         formData: initialFormData,
-        sections: initialSections
+        sections: initialSections,
+        templateId: initialTemplateId
       };
 
       // Act
@@ -127,7 +132,8 @@ describe('StorageService', () => {
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
       const mockData = {
         formData: initialFormData,
-        sections: initialSections
+        sections: initialSections,
+        templateId: initialTemplateId
       };
 
       // Act
@@ -155,7 +161,8 @@ describe('StorageService', () => {
       expect(localStorageMock.removeItem).toHaveBeenCalledWith(STORAGE_KEY);
       expect(result).toEqual({
         formData: initialFormData,
-        sections: initialSections
+        sections: initialSections,
+        templateId: initialTemplateId
       });
     });
 
@@ -173,7 +180,8 @@ describe('StorageService', () => {
       expect(consoleSpy).toHaveBeenCalledWith('Error clearing localStorage:', expect.any(Error));
       expect(result).toEqual({
         formData: initialFormData,
-        sections: initialSections
+        sections: initialSections,
+        templateId: initialTemplateId
       });
       consoleSpy.mockRestore();
     });

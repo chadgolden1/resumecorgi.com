@@ -1,11 +1,12 @@
 import { FormData, Section } from '../types';
-import { initialFormData, initialSections } from './DataInitializer';
+import { initialFormData, initialSections, initialTemplateId } from './DataInitializer';
 
 export const STORAGE_KEY = 'resume-builder-data';
 
 interface StoredData {
   formData: FormData;
   sections: Section[];
+  templateId?: string;
 }
 
 /**
@@ -20,7 +21,8 @@ export const loadFromStorage = (): StoredData => {
       const parsedData = JSON.parse(savedData);
       return {
         formData: parsedData.formData || initialFormData,
-        sections: parsedData.sections || initialSections
+        sections: parsedData.sections || initialSections,
+        templateId: parsedData.templateId || initialTemplateId,
       };
     }
   } catch (error) {
@@ -29,7 +31,8 @@ export const loadFromStorage = (): StoredData => {
   
   return {
     formData: initialFormData,
-    sections: initialSections
+    sections: initialSections,
+    templateId: initialTemplateId,
   };
 };
 
@@ -49,7 +52,7 @@ export const saveToStorage = (data: StoredData): void => {
  * Clear all stored data and return to initial defaults
  * @returns Object containing initial formData and sections
  */
-export const clearStorage = (targetFormData: FormData = initialFormData, targetSections: Section[] = initialSections): StoredData => {
+export const clearStorage = (targetFormData: FormData = initialFormData, targetSections: Section[] = initialSections, targetTemplateId: string = initialTemplateId): StoredData => {
   try {
     localStorage.removeItem(STORAGE_KEY);
   } catch (error) {
@@ -58,6 +61,7 @@ export const clearStorage = (targetFormData: FormData = initialFormData, targetS
   
   return {
     formData: targetFormData,
-    sections: targetSections
+    sections: targetSections,
+    templateId: targetTemplateId
   };
 };

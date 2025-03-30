@@ -1,4 +1,5 @@
 import { FormData, Section } from '../types';
+import { TemplateFactory } from './LaTeX/TemplateFactory';
 
 export const initialSections: Section[] = [
   { id: 'personalInfo', displayName: 'About You', href: '#start', selected: true, originalOrder: 0, sortOrder: 0, required: true, sortable: false },
@@ -35,6 +36,8 @@ export const createSectionsFromFormData = (formData: FormData): Section[] => {
   
   return defaultSections;
 };
+
+export const initialTemplateId: string = TemplateFactory.getAvailableTemplates()[0].id;
 
 export const initialFormData: FormData = {
   personalInfo: {

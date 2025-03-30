@@ -3,8 +3,9 @@ import * as pdfjsLib from 'pdfjs-dist';
 import EngineManager from "../lib/EngineManager";
 import Skeleton from "../components/Skeleton";
 import Toolbar from "../components/Toolbar";
-import { latexGenerator } from "../lib/LaTeXService";
+//import { latexGenerator } from "../lib/LaTeXService";
 import { FormData, Section } from "../types";
+import { TemplateFactory } from "@/lib/LaTeX/TemplateFactory";
 
 interface CompilationQueueItem {
   resolve: (value: unknown) => void;
@@ -20,12 +21,20 @@ interface PreviewState {
 interface PreviewProps {
   formData: FormData;
   selectedSections: Section[];
+  templateId: string;
 }
 
-function Preview({ formData, selectedSections }: PreviewProps) {
+function Preview({ formData, selectedSections, templateId }: PreviewProps) {
+  const scale = 1;
+  const debounceShortMs = 50;
+  const debounceLongMs = 600;
+  const debounceInactivityIntervalMs = 1000;
+  const maxWidth = 800;
+
   const compilationQueue = useRef<CompilationQueueItem[]>([]);
   const isProcessing = useRef<boolean>(false);
 
+  const prevTemplateRef = useRef<string | null>(null);
   const prevFormDataRef = useRef<FormData | null>(null);
   const prevSelectedSectionsRef = useRef<Section[] | null>(null);
   const debounceTimerRef = useRef<number | null>(null);
@@ -51,19 +60,13 @@ function Preview({ formData, selectedSections }: PreviewProps) {
   const [pageNumPending, setPageNumPending] = useState<number | null>(null);
   const [numPages, setNumPages] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [canvasWidthPx, setCanvasWidthPx] = useState<number>(768);
-
-  const scale = 1;
-  const debounceShortMs = 50;
-  const debounceLongMs = 600;
-  const debounceInactivityIntervalMs = 1000;
-  const maxWidth = 800;
+  const [canvasWidthPx, setCanvasWidthPx] = useState<number>(maxWidth);
 
   // Use memoized LaTeX to avoid recreating it on every render
   const compiledLaTeX = useMemo(() => {
-    let laTeX = latexGenerator.generateLaTeX(formData, selectedSections);
+    let laTeX = TemplateFactory.createTemplate(templateId, formData, selectedSections).generateLaTeX();
     return laTeX;
-  }, [formData, selectedSections]);
+  }, [formData, selectedSections, templateId]);
 
   useEffect(() => {
     const pdfViewerArea = document.getElementById('pdf-viewer-area');
@@ -71,7 +74,6 @@ function Preview({ formData, selectedSections }: PreviewProps) {
     const updateCanvasWidth = () => {
       if (pdfViewerArea) {
         const viewerWidth = pdfViewerArea.clientWidth || document.body.clientWidth;
-        console.log('Updating canvas width', canvasWidthPx, viewerWidth);
         setCanvasWidthPx(Math.min(viewerWidth, maxWidth));
       }
     };
@@ -96,7 +98,11 @@ function Preview({ formData, selectedSections }: PreviewProps) {
     const prevSelectedSectionsString = JSON.stringify(prevSelectedSectionsRef.current);
   
     // Skip if data hasn't changed
-    if (pageRendered && currentFormDataString === prevFormDataString && currentSelectedSectionsString === prevSelectedSectionsString) {
+    if (
+      pageRendered && currentFormDataString === prevFormDataString &&
+      currentSelectedSectionsString === prevSelectedSectionsString &&
+      prevTemplateRef.current === templateId
+    ) {
       console.log('No changes detected. Skipping compilation');
       return;
     }
@@ -104,6 +110,7 @@ function Preview({ formData, selectedSections }: PreviewProps) {
     // Store current values for next comparison
     prevFormDataRef.current = JSON.parse(currentFormDataString);
     prevSelectedSectionsRef.current = JSON.parse(currentSelectedSectionsString);
+    prevTemplateRef.current = templateId;
 
     setLocalPreviewState({
       formData,
@@ -220,6 +227,10 @@ function Preview({ formData, selectedSections }: PreviewProps) {
         isProcessing.current = false;
         processQueue(); // Process next in queue
         return;
+      }
+
+      if (result.status !== 0) {
+        console.error(result.log);
       }
       
       // Load the PDF

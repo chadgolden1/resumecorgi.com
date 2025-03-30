@@ -17,6 +17,7 @@ import { createSectionsFromFormData, initialFormData, sampleFormData } from '@/l
 import Projects from './forms/Projects';
 import GenericSection from './forms/GenericSection';
 import { downloadResumeAsJson } from '@/lib/ImportExportService';
+import { TemplateFactory, TemplateInfo } from '@/lib/LaTeX/TemplateFactory';
 
 interface SectionRenderItem {
   id: string;
@@ -30,10 +31,12 @@ function Editor() {
   const formContainerRef = useRef<HTMLDivElement | null>(null);
 
   // Load data from localStorage or use initial data
-  const { formData: savedFormData, sections: savedSections } = loadFromStorage();
+  const { formData: savedFormData, sections: savedSections, templateId: savedTemplateId } = loadFromStorage();
 
   const [formData, setFormData] = useState<FormData>(savedFormData);
   const [sections, setSections] = useState<Section[]>(savedSections);
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateInfo>(
+    TemplateFactory.getAvailableTemplates().find(t => t.id === savedTemplateId) || TemplateFactory.getAvailableTemplates()[0]);
 
   // Handle beforeunload event to remind users their data is saved
   useEffect(() => {
@@ -52,8 +55,9 @@ function Editor() {
 
   // Save data to localStorage whenever it changes
   useEffect(() => {
-    saveToStorage({ formData, sections });
-  }, [formData, sections]);
+    const templateId: string = selectedTemplate.id;
+    saveToStorage({ formData, sections, templateId });
+  }, [formData, sections, selectedTemplate]);
 
   const addGenericSection = () => {
     const newSectionId = `genericSection${Object.keys(formData.genericSections || {}).length}`;
@@ -221,6 +225,11 @@ function Editor() {
     }
   };
 
+  const handleTemplateChange = (templateId: string) => {
+    let template = TemplateFactory.getAvailableTemplates().find(tpl => tpl.id === templateId) || TemplateFactory.getAvailableTemplates()[0];
+    setSelectedTemplate(template);
+  }
+
   const sortedSections = [...sections].sort((a, b) => a.sortOrder - b.sortOrder);
 
   return (
@@ -233,6 +242,7 @@ function Editor() {
         } />
         <AppSidebar 
           sections={sortedSections}
+          selectedTemplate={selectedTemplate}
           handleMoveTo={handleMoveTo}
           handleSectionSelected={handleSectionSelected}
           handleSectionRemoved={handleSectionRemoved}
@@ -240,7 +250,8 @@ function Editor() {
           sampleData={() => resetToSampleData() }
           onAddGenericSection={addGenericSection}
           onExport={() => downloadResumeAsJson(formData) }
-          onImportJsonFormData={formData => loadImportedJsonResume(formData) } />
+          onImportJsonFormData={formData => loadImportedJsonResume(formData) }
+          onTemplateChanged={(templateId) => handleTemplateChange(templateId) } />
         <div className="grid lg:grid-cols-12 grid-cols-12 gap-0 w-full h-screen">
           <div
             ref={formContainerRef}
@@ -295,7 +306,7 @@ function Editor() {
             [&::-webkit-scrollbar-thumb]:bg-zinc-400
             dark:[&::-webkit-scrollbar-track]:bg-zinc-950/25
             dark:[&::-webkit-scrollbar-thumb]:bg-zinc-500/70`}>
-            <Preview formData={formData} selectedSections={sections} />
+            <Preview formData={formData} selectedSections={sections} templateId={selectedTemplate.id} />
           </div>
         </div>
         <div className={`

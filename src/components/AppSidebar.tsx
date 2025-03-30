@@ -1,5 +1,5 @@
 import React from "react";
-import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarTrigger } from "@/components/ui/sidebar"
+import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarTrigger } from "@/components/ui/sidebar"
 import { NavSection } from "@/types";
 import SortableNav from "./SortableNav";
 import { DownloadCloud, EraserIcon, ExternalLink, FileJson, FlaskConical, ListPlus, UploadCloud } from "lucide-react";
@@ -7,9 +7,12 @@ import Corgi from "./Corgi";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { ResumeImporter } from "./ResumeImporter";
 import { FormData } from "@/types";
+import { TemplateSwitcher } from "./TemplateSwitcher";
+import { TemplateInfo } from "@/lib/LaTeX/TemplateFactory";
 
 interface SidebarProps {
   sections: NavSection[];
+  selectedTemplate: TemplateInfo;
   handleMoveTo: (oldIndex: number, newIndex: number) => void;
   handleSectionSelected: (sectionId: string, checked: boolean) => void;
   handleSectionRemoved: (sectionId: string) => void;
@@ -18,6 +21,7 @@ interface SidebarProps {
   onAddGenericSection?: () => void;
   onExport: () => void;
   onImportJsonFormData: (formData: FormData) => void;
+  onTemplateChanged: (templateId: string) => void;
 }
 
 const clearForm = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>, resetData?: () => void) => {
@@ -39,6 +43,7 @@ const corgiSize: number = 84;
 
 function AppSidebar({
   sections,
+  selectedTemplate,
   handleMoveTo,
   handleSectionSelected,
   handleSectionRemoved,
@@ -46,7 +51,8 @@ function AppSidebar({
   sampleData,
   onAddGenericSection,
   onExport,
-  onImportJsonFormData
+  onImportJsonFormData,
+  onTemplateChanged
 }: SidebarProps) {
   return (
     <Sidebar
@@ -63,6 +69,12 @@ function AppSidebar({
           dark:[&::-webkit-scrollbar-track]:bg-zinc-800
           dark:[&::-webkit-scrollbar-thumb]:bg-zinc-700
         ">
+
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <TemplateSwitcher selectedTemplate={selectedTemplate} onTemplateChanged={onTemplateChanged}  />
+          </SidebarGroupContent>
+        </SidebarGroup>
         <SidebarGroup className="block lg:hidden py-0">
           <SidebarGroupContent>
             <SidebarTrigger className="
