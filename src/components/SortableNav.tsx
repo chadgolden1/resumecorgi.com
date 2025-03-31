@@ -16,19 +16,13 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { NavSection } from '../types';
+import { useResume } from '@/context/ResumeContext';
 
 interface SortableNavItemProps {
   id: string;
   section: NavSection;
   onSelected: (sectionId: string) => void;
   onRemoved: (sectionId: string) => void;
-}
-
-interface SortableNavProps {
-  sections: NavSection[];
-  handleMoveTo: (oldIndex: number, newIndex: number) => void;
-  handleSelected: (sectionId: string, checked: boolean) => void;
-  handleRemoved: (sectionId: string) => void;
 }
 
 const SortableNavItem: React.FC<SortableNavItemProps> = ({ id, section, onSelected, onRemoved }) => {
@@ -85,11 +79,7 @@ const SortableNavItem: React.FC<SortableNavItemProps> = ({ id, section, onSelect
   }
 
   return (
-    <div 
-      ref={setNodeRef} 
-      style={style} 
-      className={`relative block group/sections mb-[0.5rem]`}
-    >
+    <div ref={setNodeRef} style={style} className={`relative block group/sections mb-[0.5rem]`}>
       <span className="
         absolute top-0 left-0 
         w-full h-full 
@@ -108,8 +98,7 @@ const SortableNavItem: React.FC<SortableNavItemProps> = ({ id, section, onSelect
           ps-3 pe-1.5 py-0.25
           font-medium text-black dark:text-white
           border-1 border-black rounded-[0.45rem]
-        `}
-      >
+        `}>
         <div className="flex justify-between items-center w-full">
           <a href={section.href} className={`${anchorCss}`}>{section.displayName || "Section Title"}</a>
           
@@ -120,7 +109,6 @@ const SortableNavItem: React.FC<SortableNavItemProps> = ({ id, section, onSelect
               tabIndex={0}
               title={`Remove ${section.displayName}`}
             >
-
               <span className="sr-only">{`Remove ${section.displayName}`}</span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -139,56 +127,51 @@ const SortableNavItem: React.FC<SortableNavItemProps> = ({ id, section, onSelect
             </div>
           )}
 
-          {!section.required && (
-            <div 
-              className="p-2 rounded-full hover:cursor-pointer"
-              onClick={() => onSelected(id)}
-              tabIndex={0}
-              title={section.selected ? `Hide ${section.displayName}` : `Show ${section.displayName}`}
-            >
-
-              <span className="sr-only">
-                {section.selected ? `Hide ${section.displayName}` : `Show ${section.displayName}`}
-              </span>
-              {section.selected && (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="lucide lucide-eye size-4"
-                  >
-                    <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" />
-                    <circle cx="12" cy="12" r="3" />
-                </svg>
-              )}
-
-              {!section.selected && (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="lucide lucide-eye-off size-4"
-                  >
-                  <path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/>
-                  <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/>
-                  <path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/>
-                  <path d="m2 2 20 20"/>
-                </svg>
-              )}
-            </div>
-          )}
+          <div 
+            className="p-2 rounded-full hover:cursor-pointer"
+            onClick={() => onSelected(id)}
+            tabIndex={0}
+            title={section.selected ? `Hide ${section.displayName}` : `Show ${section.displayName}`}
+          >
+            <span className="sr-only">
+              {section.selected ? `Hide ${section.displayName}` : `Show ${section.displayName}`}
+            </span>
+            {section.selected ? (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="lucide lucide-eye size-4"
+              >
+                <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            ) : (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="lucide lucide-eye-off size-4"
+              >
+                <path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/>
+                <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/>
+                <path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/>
+                <path d="m2 2 20 20"/>
+              </svg>
+            )}
+          </div>
 
           {section.sortable && (
             <div 
@@ -220,7 +203,10 @@ const SortableNavItem: React.FC<SortableNavItemProps> = ({ id, section, onSelect
   );
 };
 
-const SortableNav: React.FC<SortableNavProps> = ({ sections, handleMoveTo, handleSelected, handleRemoved }) => {
+const SortableNav: React.FC = () => {
+  const { sections, handleMoveTo, handleSectionSelected, handleSectionRemoved } = useResume();
+  const sortedSections = [...sections].sort((a, b) => a.sortOrder - b.sortOrder);
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -248,17 +234,17 @@ const SortableNav: React.FC<SortableNavProps> = ({ sections, handleMoveTo, handl
       onDragEnd={handleDragEnd}
     >
       <SortableContext 
-        items={sections.map(section => section.id)}
+        items={sortedSections.map(section => section.id)}
         strategy={verticalListSortingStrategy}
       >
         <div>
-          {sections.map((section) => (
+          {sortedSections.map((section) => (
             <SortableNavItem 
               key={section.id} 
               id={section.id} 
               section={section}
-              onSelected={() => handleSelected(section.id, !section.selected)}
-              onRemoved={() => handleRemoved(section.id)}
+              onSelected={() => handleSectionSelected(section.id, !section.selected)}
+              onRemoved={() => handleSectionRemoved(section.id)}
             />
           ))}
         </div>

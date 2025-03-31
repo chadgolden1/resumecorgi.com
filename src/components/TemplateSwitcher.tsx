@@ -11,17 +11,13 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { TemplateFactory, TemplateInfo } from "@/lib/LaTeX/TemplateFactory"
+import { TemplateFactory } from "@/lib/LaTeX/TemplateFactory"
+import { useResume } from '@/context/ResumeContext';
 
 const templates = TemplateFactory.getAvailableTemplates();
 
-export function TemplateSwitcher({
-  selectedTemplate = templates[0],
-  onTemplateChanged
-}: {
-  selectedTemplate: TemplateInfo,
-  onTemplateChanged: (templateId: string) => void;
-}) {
+export function TemplateSwitcher() {
+  const { selectedTemplate, setSelectedTemplate } = useResume();
 
   return (
     <SidebarMenu>
@@ -50,7 +46,7 @@ export function TemplateSwitcher({
               <DropdownMenuItem
                 className="flex flex-col items-start rounded-md p-2.5 hover:cursor-pointer"
                 key={template.id}
-                onSelect={() => onTemplateChanged(template.id)}
+                onSelect={() => setSelectedTemplate(template)}
               >
                 <div className="flex w-full items-center">
                   {/* Template thumbnail preview if available */}

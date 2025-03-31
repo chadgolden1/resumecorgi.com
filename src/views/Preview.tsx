@@ -6,6 +6,7 @@ import Toolbar from "../components/Toolbar";
 //import { latexGenerator } from "../lib/LaTeXService";
 import { FormData, Section } from "../types";
 import { TemplateFactory } from "@/lib/LaTeX/TemplateFactory";
+import { useResume } from '@/context/ResumeContext';
 
 interface CompilationQueueItem {
   resolve: (value: unknown) => void;
@@ -18,13 +19,8 @@ interface PreviewState {
   compiling: boolean;
 }
 
-interface PreviewProps {
-  formData: FormData;
-  selectedSections: Section[];
-  templateId: string;
-}
-
-function Preview({ formData, selectedSections, templateId }: PreviewProps) {
+function Preview() {
+  const { formData, sections, selectedTemplate } = useResume();
   const scale = 1;
   const debounceShortMs = 50;
   const debounceLongMs = 600;
@@ -64,9 +60,9 @@ function Preview({ formData, selectedSections, templateId }: PreviewProps) {
 
   // Use memoized LaTeX to avoid recreating it on every render
   const compiledLaTeX = useMemo(() => {
-    let laTeX = TemplateFactory.createTemplate(templateId, formData, selectedSections).generateLaTeX();
+    let laTeX = TemplateFactory.createTemplate(selectedTemplate.id, formData, sections).generateLaTeX();
     return laTeX;
-  }, [formData, selectedSections, templateId]);
+  }, [formData, sections, selectedTemplate]);
 
   useEffect(() => {
     const pdfViewerArea = document.getElementById('pdf-viewer-area');
@@ -94,14 +90,14 @@ function Preview({ formData, selectedSections, templateId }: PreviewProps) {
     const currentFormDataString = JSON.stringify(formData);
     const prevFormDataString = JSON.stringify(prevFormDataRef.current);
   
-    const currentSelectedSectionsString = JSON.stringify(selectedSections);
+    const currentSelectedSectionsString = JSON.stringify(sections);
     const prevSelectedSectionsString = JSON.stringify(prevSelectedSectionsRef.current);
   
     // Skip if data hasn't changed
     if (
       pageRendered && currentFormDataString === prevFormDataString &&
       currentSelectedSectionsString === prevSelectedSectionsString &&
-      prevTemplateRef.current === templateId
+      prevTemplateRef.current === selectedTemplate.id
     ) {
       console.log('No changes detected. Skipping compilation');
       return;
@@ -110,11 +106,11 @@ function Preview({ formData, selectedSections, templateId }: PreviewProps) {
     // Store current values for next comparison
     prevFormDataRef.current = JSON.parse(currentFormDataString);
     prevSelectedSectionsRef.current = JSON.parse(currentSelectedSectionsString);
-    prevTemplateRef.current = templateId;
+    prevTemplateRef.current = selectedTemplate.id;
 
     setLocalPreviewState({
       formData,
-      selectedSections,
+      selectedSections: sections,
       compiling: true
     });
     
@@ -177,7 +173,7 @@ function Preview({ formData, selectedSections, templateId }: PreviewProps) {
       // Cancel any in-progress compilation
       cleanupRef.current?.();
     };
-  }, [formData, selectedSections, compiledLaTeX, pageRendered, canvasWidthPx]);
+  }, [formData, sections, compiledLaTeX, pageRendered, canvasWidthPx, selectedTemplate.id]);
 
   const compileLaTeX = async (): Promise<unknown> => {
     // Queue the compilation request and wait for it to process

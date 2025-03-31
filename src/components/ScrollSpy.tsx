@@ -1,20 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { Section } from '../types';
+import { useResume } from '@/context/ResumeContext';
 
 interface ScrollSpyProps {
-  sections: Section[];
-  sectionTitles: Record<string, string>;
   containerRef: React.RefObject<HTMLDivElement | null>;
   sectionRefs: React.RefObject<{ [key: string]: HTMLDivElement | null }>;
 }
 
 const ScrollSpy = ({ 
-  sections, 
-  sectionTitles, 
   containerRef, 
   sectionRefs 
 }: ScrollSpyProps) => {
+  const { sections } = useResume();
   const [activeSection, setActiveSection] = useState<string>('');
+
+  const sectionTitles = sections.reduce((acc, section) => {
+    acc[section.id] = section.displayName;
+    return acc;
+  }, {} as Record<string, string>);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -67,6 +69,8 @@ const ScrollSpy = ({
     }
   };
 
+  const sortedSections = [...sections].sort((a, b) => a.sortOrder - b.sortOrder);
+
   return (
     <div className="
       sticky top-0 z-10 
@@ -79,7 +83,7 @@ const ScrollSpy = ({
       dark:[&::-webkit-scrollbar-track]:bg-zinc-800
       dark:[&::-webkit-scrollbar-thumb]:bg-zinc-600">
       <ul className="flex flex-nowrap min-w-max lg:min-w-0 lg:w-full text-sm text-center font-semibold">
-        {sections
+        {sortedSections
           .filter(section => section.selected)
           .map(section => (
             <li className="whitespace-nowrap" key={section.id}>

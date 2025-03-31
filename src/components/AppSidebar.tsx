@@ -1,6 +1,5 @@
 import React from "react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarTrigger } from "@/components/ui/sidebar"
-import { NavSection } from "@/types";
 import SortableNav from "./SortableNav";
 import { DownloadCloud, EraserIcon, ExternalLink, FileJson, FlaskConical, ListPlus, UploadCloud } from "lucide-react";
 import Corgi from "./Corgi";
@@ -8,20 +7,13 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { ResumeImporter } from "./ResumeImporter";
 import { FormData } from "@/types";
 import { TemplateSwitcher } from "./TemplateSwitcher";
-import { TemplateInfo } from "@/lib/LaTeX/TemplateFactory";
+import { useResume } from '@/context/ResumeContext';
 
 interface SidebarProps {
-  sections: NavSection[];
-  selectedTemplate: TemplateInfo;
-  handleMoveTo: (oldIndex: number, newIndex: number) => void;
-  handleSectionSelected: (sectionId: string, checked: boolean) => void;
-  handleSectionRemoved: (sectionId: string) => void;
   resetData?: () => void;
   sampleData?: () => void;
-  onAddGenericSection?: () => void;
   onExport: () => void;
   onImportJsonFormData: (formData: FormData) => void;
-  onTemplateChanged: (templateId: string) => void;
 }
 
 const clearForm = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>, resetData?: () => void) => {
@@ -29,31 +21,21 @@ const clearForm = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>, resetData
   resetData?.();
 }
 
-const loadSample = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>, sampleData?: () => void) => {
+const exportJson = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>, onExport: () => void) => {
   e.preventDefault();
-  sampleData?.();
-}
-
-const exportJson = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>, onExport?: () => void) => {
-  e.preventDefault();
-  onExport?.();
+  onExport();
 }
 
 const corgiSize: number = 84;
 
 function AppSidebar({
-  sections,
-  selectedTemplate,
-  handleMoveTo,
-  handleSectionSelected,
-  handleSectionRemoved,
   resetData,
   sampleData,
-  onAddGenericSection,
   onExport,
   onImportJsonFormData,
-  onTemplateChanged
 }: SidebarProps) {
+  const { addGenericSection } = useResume();
+
   return (
     <Sidebar
       className="
@@ -72,7 +54,7 @@ function AppSidebar({
 
         <SidebarGroup>
           <SidebarGroupContent>
-            <TemplateSwitcher selectedTemplate={selectedTemplate} onTemplateChanged={onTemplateChanged}  />
+            <TemplateSwitcher />
           </SidebarGroupContent>
         </SidebarGroup>
         <SidebarGroup className="block lg:hidden py-0">
@@ -89,7 +71,7 @@ function AppSidebar({
               overflow-hidden
             ">
             <div className="px-2">
-              <SortableNav sections={sections} handleMoveTo={handleMoveTo} handleSelected={handleSectionSelected} handleRemoved={handleSectionRemoved} />
+              <SortableNav />
             </div>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -100,7 +82,7 @@ function AppSidebar({
                 <SidebarMenuItem key={"new-custom-section"}>
                   <SidebarMenuButton asChild className="py-0 hover:bg-gray-200 dark:hover:bg-zinc-950/70">
                     <a href={`#`}
-                      onClick={(e) => { e.preventDefault(); onAddGenericSection?.() }}>
+                      onClick={(e) => { e.preventDefault(); addGenericSection?.() }}>
                       <ListPlus />
                       <span>New Section</span>
                     </a>
@@ -150,7 +132,7 @@ function AppSidebar({
                   </DialogContent>
                 </Dialog>
               </SidebarMenuItem>
-              <SidebarMenuItem key={"menu-clear-data"}>
+              <SidebarMenuItem key={"menu-clear-resume"}>
                 <SidebarMenuButton asChild className="hover:bg-gray-200 dark:hover:bg-zinc-950/70">
                   <a href={"#"} onClick={(e) => clearForm(e, resetData)}>
                     <EraserIcon />
@@ -158,9 +140,9 @@ function AppSidebar({
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              <SidebarMenuItem key={"menu-load-sample-data"}>
+              <SidebarMenuItem key={"menu-sample-resume"}>
                 <SidebarMenuButton asChild className="hover:bg-gray-200 dark:hover:bg-zinc-950/70">
-                  <a href={"#"} onClick={(e) => loadSample(e, sampleData)}>
+                  <a href={"#"} onClick={(e) => { e.preventDefault(); sampleData?.() }}>
                     <FlaskConical />
                     <span>Load Sample</span>
                   </a>

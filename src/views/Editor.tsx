@@ -17,7 +17,7 @@ import { createSectionsFromFormData, initialFormData, sampleFormData } from '@/l
 import Projects from './forms/Projects';
 import GenericSection from './forms/GenericSection';
 import { downloadResumeAsJson } from '@/lib/ImportExportService';
-import { TemplateFactory, TemplateInfo } from '@/lib/LaTeX/TemplateFactory';
+import { useResume } from '@/context/ResumeContext';
 
 interface SectionRenderItem {
   id: string;
@@ -30,66 +30,19 @@ function Editor() {
   const sectionRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const formContainerRef = useRef<HTMLDivElement | null>(null);
 
-  // Load data from localStorage or use initial data
-  const { formData: savedFormData, sections: savedSections, templateId: savedTemplateId } = loadFromStorage();
-
-  const [formData, setFormData] = useState<FormData>(savedFormData);
-  const [sections, setSections] = useState<Section[]>(savedSections);
-  const [selectedTemplate, setSelectedTemplate] = useState<TemplateInfo>(
-    TemplateFactory.getAvailableTemplates().find(t => t.id === savedTemplateId) || TemplateFactory.getAvailableTemplates()[0]);
-
-  // Handle beforeunload event to remind users their data is saved
-  useEffect(() => {
-    const handleBeforeUnload = (/*e: BeforeUnloadEvent*/) => {
-      // No need to show a warning since data is saved
-      // e.preventDefault();
-      // e.returnValue = '';
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, []);
+  const {
+    formData,
+    sections,
+    selectedTemplate,
+    setFormData,
+    setSections,
+  } = useResume();
 
   // Save data to localStorage whenever it changes
   useEffect(() => {
     const templateId: string = selectedTemplate.id;
     saveToStorage({ formData, sections, templateId });
   }, [formData, sections, selectedTemplate]);
-
-  const addGenericSection = () => {
-    const newSectionId = `genericSection${Object.keys(formData.genericSections || {}).length}`;
-    
-    // Update formData with new generic section
-    setFormData(prevData => ({
-      ...prevData,
-      genericSections: {
-        ...(prevData.genericSections || {}),
-        [newSectionId]: {
-          title: 'New Section',
-          items: []
-        }
-      }
-    }));
-
-    // Add section to sections list
-    setSections(prevSections => [
-      ...prevSections,
-      {
-        id: newSectionId,
-        displayName: 'New Section',
-        href: `#${newSectionId}`,
-        selected: true,
-        originalOrder: prevSections.length,
-        sortOrder: prevSections.length,
-        required: false,
-        sortable: true,
-        removeable: true,
-      }
-    ]);
-  };
 
   const sectionRenderMapping = useMemo<SectionRenderItem[]>(() => [
     {
@@ -98,7 +51,7 @@ function Editor() {
       renderFunc: () =>
         <>
           <Card>
-            <PersonalInfo personalInfo={formData.personalInfo} handleChange={handleChange} />
+            <PersonalInfo />
             <div className="-mb-1.5"></div>
           </Card>
         </>
@@ -109,7 +62,7 @@ function Editor() {
       renderFunc: () =>
         <>
           <Card>
-            <Experience experiences={formData.experience} setFormData={setFormData} />
+            <Experience />
           </Card>
         </>
     },
@@ -119,7 +72,7 @@ function Editor() {
       renderFunc: () =>
         <>
           <Card>
-            <Education education={formData.education} setFormData={setFormData} />
+            <Education />
           </Card>
         </>
     },
@@ -129,7 +82,7 @@ function Editor() {
       renderFunc: () =>
         <>
           <Card>
-            <Skills skills={formData.skills} setFormData={setFormData} />
+            <Skills />
           </Card>
         </>
     },
@@ -139,7 +92,7 @@ function Editor() {
       renderFunc: () =>
         <>
           <Card>
-            <Projects projects={formData.projects} setFormData={setFormData} />
+            <Projects />
           </Card>
         </>
     },
@@ -153,23 +106,18 @@ function Editor() {
             <GenericSection
               sectionId={sectionId}
               section={section}
-              setFormData={setFormData}
               onTitleChange={(title) => {
                 // When a generic section title changes, update the corresponding section's displayName
-                setSections(prevSections => {
-                  return prevSections.map(section => {
-                    if (section.id === sectionId) {
-                      return { ...section, displayName: title };
-                    }
-                    return section;
-                  });
-                });
+                const updatedSections = sections.map(section => 
+                  section.id === sectionId ? { ...section, displayName: title } : section
+                );
+                setSections(updatedSections);
               }}
             />
           </Card>
         </>
     })))
-  ], [formData]); // Re-compute when formData changes
+  ], [formData]);
 
   // reactive mapping of section IDs to their titles
   const sectionTitles = useMemo<Record<string, string>>(() => {
@@ -177,58 +125,34 @@ function Editor() {
       acc[item.id] = item.title;
       return acc;
     }, {} as Record<string, string>);
-  }, [sectionRenderMapping]); // Re-compute when sectionRenderMapping changes
-
-  const handleChange = (section: string, field: string, value: string | string[]): void => {
-    setFormData(prevData => ({
-      ...prevData,
-      [section]: {
-        ...prevData[section],
-        [field]: value
-      }
-    }));
-  };
-
-  const handleSectionSelected = (sectionId: string, checked: boolean): void => {
-    setSections(prevSections => toggleSectionSelected(prevSections, sectionId, checked) as Section[]);
-  };
-
-  const handleSectionRemoved = (sectionId: string): void => {
-    setSections(prevSections => prevSections.filter(s => s.id !== sectionId));
-  };
-
-  const handleMoveTo = (oldIndex: number, newIndex: number): void => {
-    setSections(prevSections => moveTo(prevSections, oldIndex, newIndex) as Section[]);
-  };
+  }, [sectionRenderMapping]);
 
   const resetToDefaults = () => {
-    if (window.confirm('Are you sure you want to reset all your data? This cannot be undone.')) {
-      const { formData: targetFormData, sections: initialSections } = clearStorage(initialFormData);
-      setFormData(targetFormData);
-      setSections(initialSections);
+    if (!window.confirm('Are you sure you want to reset all your data? This cannot be undone.')) {
+      return;
     }
+
+    setFormData(initialFormData);
+    setSections(createSectionsFromFormData(initialFormData));
   };
 
   const resetToSampleData = () => {
-    if (window.confirm('Loading sample data will overwrite any edits you have made. This cannot be undone. Would you like to proceed?')) {
-      const { formData: targetFormData, sections: initialSections } = clearStorage(sampleFormData);
-      setFormData(targetFormData);
-      setSections(initialSections);
+    if (!window.confirm('Loading sample data will overwrite any edits you have made. This cannot be undone. Would you like to proceed?')) {
+      return;
     }
-  }
 
-  const loadImportedJsonResume = (importedFormData: FormData) => {
-    if (window.confirm('Loading imported resume data will overwrite any edits you have made. This cannot be undone. Would you like to proceed?')) {
-      const { formData: targetFormData, sections: targetSections } = clearStorage(importedFormData, createSectionsFromFormData(importedFormData));
-      setFormData(targetFormData);
-      setSections(targetSections);
-    }
+    setFormData(sampleFormData);
+    setSections(createSectionsFromFormData(sampleFormData));
   };
 
-  const handleTemplateChange = (templateId: string) => {
-    let template = TemplateFactory.getAvailableTemplates().find(tpl => tpl.id === templateId) || TemplateFactory.getAvailableTemplates()[0];
-    setSelectedTemplate(template);
-  }
+  const loadImportedJsonResume = (importedFormData: FormData) => {
+    if (!window.confirm('Loading imported resume data will overwrite any edits you have made. This cannot be undone. Would you like to proceed?')) {
+      return;
+    }
+
+    setFormData(importedFormData);
+    setSections(createSectionsFromFormData(importedFormData));
+  };
 
   const sortedSections = [...sections].sort((a, b) => a.sortOrder - b.sortOrder);
 
@@ -241,17 +165,11 @@ function Editor() {
             dark:hover:bg-zinc-800 dark:hover:text-zinc-200" />
         } />
         <AppSidebar 
-          sections={sortedSections}
-          selectedTemplate={selectedTemplate}
-          handleMoveTo={handleMoveTo}
-          handleSectionSelected={handleSectionSelected}
-          handleSectionRemoved={handleSectionRemoved}
           resetData={() => resetToDefaults() }
           sampleData={() => resetToSampleData() }
-          onAddGenericSection={addGenericSection}
           onExport={() => downloadResumeAsJson(formData) }
           onImportJsonFormData={formData => loadImportedJsonResume(formData) }
-          onTemplateChanged={(templateId) => handleTemplateChange(templateId) } />
+        />
         <div className="grid lg:grid-cols-12 grid-cols-12 gap-0 w-full h-screen">
           <div
             ref={formContainerRef}
@@ -269,8 +187,6 @@ function Editor() {
             dark:[&::-webkit-scrollbar-thumb]:bg-zinc-500/70`}>
             <div className="w-full mb-[75vh]" id="start">
               <ScrollSpy
-                sections={sortedSections}
-                sectionTitles={sectionTitles}
                 containerRef={formContainerRef}
                 sectionRefs={sectionRefs}
               />
@@ -306,7 +222,7 @@ function Editor() {
             [&::-webkit-scrollbar-thumb]:bg-zinc-400
             dark:[&::-webkit-scrollbar-track]:bg-zinc-950/25
             dark:[&::-webkit-scrollbar-thumb]:bg-zinc-500/70`}>
-            <Preview formData={formData} selectedSections={sections} templateId={selectedTemplate.id} />
+            <Preview />
           </div>
         </div>
         <div className={`
