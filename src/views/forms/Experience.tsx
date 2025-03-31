@@ -2,16 +2,13 @@ import React from 'react';
 import Button from '../../components/Button.js'
 import Input from '../../components/Input.js'
 import RichTextbox from '../../components/RichTextbox.js';
-
 import { FormData, Experience as ExperienceInfo } from '../../types';
 import Separator from '../../components/Separator.js';
+import { useResume } from '@/context/ResumeContext';
 
-interface ExperienceProps {
-  experiences?: ExperienceInfo[];
-  setFormData: React.Dispatch<React.SetStateAction<FormData>>;
-}
-
-function Experience({ experiences = [], setFormData }: ExperienceProps) {
+function Experience() {
+  const { formData, setFormData } = useResume();
+  const experiences = formData.experience;
   
   const addExperience = () => {
     const newExperience = {
@@ -22,20 +19,28 @@ function Experience({ experiences = [], setFormData }: ExperienceProps) {
       accomplishments: ''
     };
 
-    setFormData(prevData => ({
-      ...prevData,
-      experience: [...prevData.experience, newExperience]
-    }));
+    setFormData({
+      ...formData,
+      experience: [...experiences, newExperience]
+    });
   };
 
   const removeExperience = (index: number): void => {
-    setFormData(prevData => {
-      const updatedExperiences = [...prevData.experience];
-      updatedExperiences.splice(index, 1);
-      return {
-        ...prevData,
-        experience: updatedExperiences
-      };
+    const updatedExperiences = [...experiences];
+    updatedExperiences.splice(index, 1);
+    setFormData({
+      ...formData,
+      experience: updatedExperiences
+    });
+  };
+
+  const updateExperience = (index: number, field: keyof ExperienceInfo, value: string): void => {
+    const updatedExperience = { ...experiences[index], [field]: value };
+    const updatedExperiences = [...experiences];
+    updatedExperiences[index] = updatedExperience;
+    setFormData({
+      ...formData,
+      experience: updatedExperiences
     });
   };
 
@@ -77,16 +82,7 @@ function Experience({ experiences = [], setFormData }: ExperienceProps) {
               name: `title${index}`, 
               value: experience.title
             }} 
-            handleChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              const updatedExperience = { ...experience, title: e.target.value };
-              const updatedExperiences = [...experiences];
-              updatedExperiences[index] = updatedExperience;
-              
-              setFormData(prevData => ({
-                ...prevData,
-                experience: updatedExperiences
-              }));
-            }} 
+            handleChange={(e: React.ChangeEvent<HTMLInputElement>) => updateExperience(index, 'title', e.target.value)} 
           />
 
           <Input 
@@ -97,16 +93,7 @@ function Experience({ experiences = [], setFormData }: ExperienceProps) {
               name: `company${index}`, 
               value: experience.company
             }} 
-            handleChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              const updatedExperience = { ...experience, company: e.target.value };
-              const updatedExperiences = [...experiences];
-              updatedExperiences[index] = updatedExperience;
-              
-              setFormData(prevData => ({
-                ...prevData,
-                experience: updatedExperiences
-              }));
-            }} 
+            handleChange={(e: React.ChangeEvent<HTMLInputElement>) => updateExperience(index, 'company', e.target.value)} 
           />
           
           <Input 
@@ -117,16 +104,7 @@ function Experience({ experiences = [], setFormData }: ExperienceProps) {
               name: `start${index}`, 
               value: experience.start 
             }} 
-            handleChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              const updatedExperience = { ...experience, start: e.target.value };
-              const updatedExperiences = [...experiences];
-              updatedExperiences[index] = updatedExperience;
-              
-              setFormData(prevData => ({
-                ...prevData,
-                experience: updatedExperiences
-              }));
-            }} 
+            handleChange={(e: React.ChangeEvent<HTMLInputElement>) => updateExperience(index, 'start', e.target.value)} 
           />
           
           <Input 
@@ -137,16 +115,7 @@ function Experience({ experiences = [], setFormData }: ExperienceProps) {
               name: `end${index}`, 
               value: experience.end
             }} 
-            handleChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              const updatedExperience = { ...experience, end: e.target.value };
-              const updatedExperiences = [...experiences];
-              updatedExperiences[index] = updatedExperience;
-              
-              setFormData(prevData => ({
-                ...prevData,
-                experience: updatedExperiences
-              }));
-            }} 
+            handleChange={(e: React.ChangeEvent<HTMLInputElement>) => updateExperience(index, 'end', e.target.value)} 
           />
           
           <span className="block text-sm text-gray-800 dark:text-gray-300 mb-1">
@@ -155,16 +124,7 @@ function Experience({ experiences = [], setFormData }: ExperienceProps) {
 
           <RichTextbox
              content={experience.accomplishments}
-             onInput={(e: React.FormEvent<HTMLElement>) => {
-              const updatedExperience = { ...experience, accomplishments: e.currentTarget.innerHTML };
-              const updatedExperiences = [...experiences];
-              updatedExperiences[index] = updatedExperience;
-              
-              setFormData(prevData => ({
-                ...prevData,
-                experience: updatedExperiences
-              }));
-            }} />
+             onInput={(e: React.FormEvent<HTMLElement>) => updateExperience(index, 'accomplishments', e.currentTarget.innerHTML)} />
         </div>
       ))}
 

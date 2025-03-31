@@ -2,16 +2,13 @@ import React from 'react';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
 import RichTextbox from '../../components/RichTextbox';
-
 import { FormData, Education as EducationInfo } from '../../types';
 import Separator from '../../components/Separator';
+import { useResume } from '@/context/ResumeContext';
 
-interface EducationProps {
-  education?: EducationInfo[];
-  setFormData: React.Dispatch<React.SetStateAction<FormData>>;
-}
-
-function Education({ education = [], setFormData }: EducationProps) {
+function Education() {
+  const { formData, setFormData } = useResume();
+  const education = formData.education;
   
   const addEducation = (): void => {
     const newEducation: EducationInfo = {
@@ -23,20 +20,28 @@ function Education({ education = [], setFormData }: EducationProps) {
       accomplishments: ''
     };
     
-    setFormData(prevData => ({
-      ...prevData,
-      education: [...prevData.education, newEducation]
-    }));
+    setFormData({
+      ...formData,
+      education: [...education, newEducation]
+    });
   };
 
   const removeEducation = (index: number): void => {
-    setFormData(prevData => {
-      const updatedEducation = [...prevData.education];
-      updatedEducation.splice(index, 1);
-      return {
-        ...prevData,
-        education: updatedEducation
-      };
+    const updatedEducation = [...education];
+    updatedEducation.splice(index, 1);
+    setFormData({
+      ...formData,
+      education: updatedEducation
+    });
+  };
+
+  const updateEducation = (index: number, field: keyof EducationInfo, value: string): void => {
+    const updatedEducation = { ...education[index], [field]: value };
+    const updatedEducations = [...education];
+    updatedEducations[index] = updatedEducation;
+    setFormData({
+      ...formData,
+      education: updatedEducations
     });
   };
 
@@ -78,16 +83,7 @@ function Education({ education = [], setFormData }: EducationProps) {
               name: `degree${index}`, 
               value: edu.degree
             }} 
-            handleChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              const updatedEducation = { ...edu, degree: e.target.value };
-              const updatedEducations = [...education];
-              updatedEducations[index] = updatedEducation;
-              
-              setFormData(prevData => ({
-                ...prevData,
-                education: updatedEducations
-              }));
-            }} 
+            handleChange={(e: React.ChangeEvent<HTMLInputElement>) => updateEducation(index, 'degree', e.target.value)} 
           />
 
           <Input 
@@ -98,16 +94,7 @@ function Education({ education = [], setFormData }: EducationProps) {
               name: `institution${index}`, 
               value: edu.institution
             }} 
-            handleChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              const updatedEducation = { ...edu, institution: e.target.value };
-              const updatedEducations = [...education];
-              updatedEducations[index] = updatedEducation;
-              
-              setFormData(prevData => ({
-                ...prevData,
-                education: updatedEducations
-              }));
-            }} 
+            handleChange={(e: React.ChangeEvent<HTMLInputElement>) => updateEducation(index, 'institution', e.target.value)} 
           />
 
           <Input 
@@ -118,16 +105,7 @@ function Education({ education = [], setFormData }: EducationProps) {
               name: `institutionLocation${index}`, 
               value: edu.location
             }} 
-            handleChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              const updatedEducation = { ...edu, location: e.target.value };
-              const updatedEducations = [...education];
-              updatedEducations[index] = updatedEducation;
-              
-              setFormData(prevData => ({
-                ...prevData,
-                education: updatedEducations
-              }));
-            }} 
+            handleChange={(e: React.ChangeEvent<HTMLInputElement>) => updateEducation(index, 'location', e.target.value)} 
           />
           
           <Input 
@@ -138,16 +116,7 @@ function Education({ education = [], setFormData }: EducationProps) {
               name: `graduationDate${index}`, 
               value: edu.graduationDate 
             }} 
-            handleChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              const updatedEducation = { ...edu, graduationDate: e.target.value };
-              const updatedEducations = [...education];
-              updatedEducations[index] = updatedEducation;
-              
-              setFormData(prevData => ({
-                ...prevData,
-                education: updatedEducations
-              }));
-            }} 
+            handleChange={(e: React.ChangeEvent<HTMLInputElement>) => updateEducation(index, 'graduationDate', e.target.value)} 
           />
           
           <Input 
@@ -158,16 +127,7 @@ function Education({ education = [], setFormData }: EducationProps) {
               name: `gpa${index}`, 
               value: edu.gpa
             }} 
-            handleChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              const updatedEducation = { ...edu, gpa: e.target.value };
-              const updatedEducations = [...education];
-              updatedEducations[index] = updatedEducation;
-              
-              setFormData(prevData => ({
-                ...prevData,
-                education: updatedEducations
-              }));
-            }} 
+            handleChange={(e: React.ChangeEvent<HTMLInputElement>) => updateEducation(index, 'gpa', e.target.value)} 
           />
           
           <span className="block text-sm text-gray-800 dark:text-gray-300 mb-1">
@@ -176,16 +136,7 @@ function Education({ education = [], setFormData }: EducationProps) {
 
           <RichTextbox
              content={edu.accomplishments || ''}
-             onInput={(e: React.FormEvent<HTMLElement>) => {
-              const updatedEducation = { ...edu, accomplishments: e.currentTarget.innerHTML };
-              const updatedEducations = [...education];
-              updatedEducations[index] = updatedEducation;
-              
-              setFormData(prevData => ({
-                ...prevData,
-                education: updatedEducations
-              }));
-            }} />
+             onInput={(e: React.FormEvent<HTMLElement>) => updateEducation(index, 'accomplishments', e.currentTarget.innerHTML)} />
         </div>
       ))}
 

@@ -59,8 +59,8 @@ export interface GenericSection {
   title: string;
   items: {
     name: string;
-    description?: string;
-    details?: string;
+    description: string;
+    details: string;
   }[];
 }
 

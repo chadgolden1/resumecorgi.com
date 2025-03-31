@@ -1,15 +1,14 @@
 import React from 'react';
 import Input from '../../components/Input';
 import Textbox from '../../components/Textbox';
-import { PersonalInfo as PersonalInfoData } from '../../types';
+import { PersonalInfo as PersonalInfoData, FormData } from '../../types';
 import Button from '../../components/Button';
+import { useResume } from '@/context/ResumeContext';
 
-interface PersonalInfoProps {
-  personalInfo: PersonalInfoData;
-  handleChange: (section: string, field: string, value: string | string[]) => void;
-}
+function PersonalInfo() {
+  const { formData, handleChange } = useResume();
+  const personalInfo = formData.personalInfo;
 
-function PersonalInfo({ personalInfo, handleChange }: PersonalInfoProps) {
   const addContact = () => {
     const newContacts = [...(personalInfo.contacts || []), ''];
     handleChange('personalInfo', 'contacts', newContacts);

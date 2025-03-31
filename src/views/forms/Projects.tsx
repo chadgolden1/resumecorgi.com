@@ -4,25 +4,34 @@ import Button from "@/components/Button";
 import Separator from "@/components/Separator";
 import { Project, FormData } from "@/types";
 import RichTextbox from "@/components/RichTextbox";
+import { useResume } from '@/context/ResumeContext';
 
-interface ProjectsProps {
-  projects?: Project[];
-  setFormData: React.Dispatch<React.SetStateAction<FormData>>;
-}
+function Projects() {
+  const { formData, setFormData } = useResume();
+  const projects = formData.projects;
 
-function Projects({ projects = [], setFormData }: ProjectsProps) {
   const addProject = () => {
-    setFormData(prevData => ({
-      ...prevData,
-      projects: [...prevData.projects, { name: '', description: '', startDate: '', endDate: '', highlights: '', url: '' }]
-    }));
+    setFormData({
+      ...formData,
+      projects: [...projects, { name: '', description: '', startDate: '', endDate: '', highlights: '', url: '' }]
+    });
   };
 
   const removeProject = (index: number) => {
-    setFormData(prevData => ({
-      ...prevData,
-      projects: prevData.projects.filter((_, i) => i !== index)
-    }));
+    setFormData({
+      ...formData,
+      projects: projects.filter((_, i) => i !== index)
+    });
+  };
+
+  const updateProject = (index: number, field: keyof Project, value: string): void => {
+    const updatedProject = { ...projects[index], [field]: value };
+    const updatedProjects = [...projects];
+    updatedProjects[index] = updatedProject;
+    setFormData({
+      ...formData,
+      projects: updatedProjects
+    });
   };
 
   return (
@@ -63,16 +72,7 @@ function Projects({ projects = [], setFormData }: ProjectsProps) {
               name: `name${index}`, 
               value: project.name
             }} 
-            handleChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              const updatedProject = { ...project, name: e.target.value };
-              const updatedProjects = [...projects];
-              updatedProjects[index] = updatedProject;
-              
-              setFormData(prevData => ({
-                ...prevData,
-                projects: updatedProjects
-              }));
-            }} 
+            handleChange={(e: React.ChangeEvent<HTMLInputElement>) => updateProject(index, 'name', e.target.value)} 
           />
 
           <Input 
@@ -83,16 +83,7 @@ function Projects({ projects = [], setFormData }: ProjectsProps) {
               name: `description${index}`, 
               value: project.description
             }} 
-            handleChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              const updatedProject = { ...project, description: e.target.value };
-              const updatedProjects = [...projects];
-              updatedProjects[index] = updatedProject;
-              
-              setFormData(prevData => ({
-                ...prevData,
-                projects: updatedProjects
-              }));
-            }} 
+            handleChange={(e: React.ChangeEvent<HTMLInputElement>) => updateProject(index, 'description', e.target.value)} 
           />
           
           <Input 
@@ -103,16 +94,7 @@ function Projects({ projects = [], setFormData }: ProjectsProps) {
               name: `startDate${index}`, 
               value: project.startDate 
             }} 
-            handleChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              const updatedProject = { ...project, startDate: e.target.value };
-              const updatedProjects = [...projects];
-              updatedProjects[index] = updatedProject;
-              
-              setFormData(prevData => ({
-                ...prevData,
-                projects: updatedProjects
-              }));
-            }} 
+            handleChange={(e: React.ChangeEvent<HTMLInputElement>) => updateProject(index, 'startDate', e.target.value)} 
           />
           
           <Input 
@@ -123,16 +105,7 @@ function Projects({ projects = [], setFormData }: ProjectsProps) {
               name: `endDate${index}`, 
               value: project.endDate
             }} 
-            handleChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              const updatedProject = { ...project, endDate: e.target.value };
-              const updatedProjects = [...projects];
-              updatedProjects[index] = updatedProject;
-              
-              setFormData(prevData => ({
-                ...prevData,
-                projects: updatedProjects
-              }));
-            }} 
+            handleChange={(e: React.ChangeEvent<HTMLInputElement>) => updateProject(index, 'endDate', e.target.value)} 
           />
           
           <span className="block text-sm text-gray-800 dark:text-gray-300 mb-1">
@@ -141,16 +114,7 @@ function Projects({ projects = [], setFormData }: ProjectsProps) {
 
           <RichTextbox
              content={project.highlights}
-             onInput={(e: React.FormEvent<HTMLElement>) => {
-              const updatedProject = { ...project, highlights: e.currentTarget.innerHTML };
-              const updatedProjects = [...projects];
-              updatedProjects[index] = updatedProject;
-              
-              setFormData(prevData => ({
-                ...prevData,
-                projects: updatedProjects
-              }));
-            }} />
+             onInput={(e: React.FormEvent<HTMLElement>) => updateProject(index, 'highlights', e.currentTarget.innerHTML)} />
         </div>
       ))}
 

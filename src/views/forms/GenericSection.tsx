@@ -4,52 +4,57 @@ import Input from '../../components/Input';
 import type { FormData, GenericSection as GenericSectionType } from '../../types';
 import Separator from '../../components/Separator';
 import RichTextbox from '../../components/RichTextbox';
+import { useResume } from '@/context/ResumeContext';
 
 interface GenericSectionProps {
   sectionId: string;
-  section: GenericSectionType;
-  setFormData: React.Dispatch<React.SetStateAction<FormData>>;
   onTitleChange?: (title: string) => void;
 }
 
-function GenericSection({ sectionId, section, setFormData, onTitleChange }: GenericSectionProps) {
+function GenericSection({ sectionId, onTitleChange }: GenericSectionProps) {
+  const { formData, setFormData } = useResume();
+  const section = formData.genericSections?.[sectionId] || { 
+    title: '', 
+    items: [] as { name: string; description: string; details: string; }[] 
+  };
+
   const addItem = () => {
-    setFormData(prevData => ({
-      ...prevData,
+    setFormData({
+      ...formData,
       genericSections: {
-        ...prevData.genericSections,
+        ...(formData.genericSections || {}),
         [sectionId]: {
-          ...prevData.genericSections[sectionId],
-          items: [...prevData.genericSections[sectionId].items, { name: '', description: '', details: '' }]
+          ...section,
+          items: [...section.items, { name: '', description: '', details: '' }]
         }
       }
-    }));
+    });
   };
 
   const removeItem = (index: number) => {
-    setFormData(prevData => ({
-      ...prevData,
+    setFormData({
+      ...formData,
       genericSections: {
-        ...prevData.genericSections,
+        ...(formData.genericSections || {}),
         [sectionId]: {
-          ...prevData.genericSections[sectionId],
-          items: prevData.genericSections[sectionId].items.filter((_, i) => i !== index)
+          ...section,
+          items: section.items.filter((_, i) => i !== index)
         }
       }
-    }));
+    });
   };
 
   const updateSectionTitle = (title: string) => {
-    setFormData(prevData => ({
-      ...prevData,
+    setFormData({
+      ...formData,
       genericSections: {
-        ...prevData.genericSections,
+        ...(formData.genericSections || {}),
         [sectionId]: {
-          ...prevData.genericSections[sectionId],
+          ...section,
           title
         }
       }
-    }));
+    });
     
     // Notify parent component about the title change
     if (onTitleChange) {
@@ -58,18 +63,18 @@ function GenericSection({ sectionId, section, setFormData, onTitleChange }: Gene
   };
 
   const updateItem = (index: number, field: 'name' | 'description' | 'details', value: string) => {
-    setFormData(prevData => ({
-      ...prevData,
+    setFormData({
+      ...formData,
       genericSections: {
-        ...prevData.genericSections,
+        ...(formData.genericSections || {}),
         [sectionId]: {
-          ...prevData.genericSections[sectionId],
-          items: prevData.genericSections[sectionId].items.map((item, i) => 
+          ...section,
+          items: section.items.map((item, i) => 
             i === index ? { ...item, [field]: value } : item
           )
         }
       }
-    }));
+    });
   };
 
   return (

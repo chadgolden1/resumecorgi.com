@@ -3,13 +3,11 @@ import Button from '../../components/Button';
 import Input from '../../components/Input';
 import { FormData, Skill } from '../../types';
 import Separator from '../../components/Separator';
+import { useResume } from '@/context/ResumeContext';
 
-interface SkillsProps {
-  skills?: Skill[];
-  setFormData: React.Dispatch<React.SetStateAction<FormData>>;
-}
-
-function Skills({ skills = [], setFormData }: SkillsProps) {
+function Skills() {
+  const { formData, setFormData } = useResume();
+  const skills = formData.skills;
   
   const addSkillCategory = (): void => {
     const newSkillCategory: Skill = {
@@ -17,42 +15,42 @@ function Skills({ skills = [], setFormData }: SkillsProps) {
       skillList: ""
     };
     
-    setFormData(prevData => ({
-      ...prevData,
-      skills: [...prevData.skills, newSkillCategory]
-    }));
+    setFormData({
+      ...formData,
+      skills: [...skills, newSkillCategory]
+    });
   };
 
   const removeSkillCategory = (index: number): void => {
-    setFormData(prevData => {
-      const updatedSkills = [...prevData.skills];
-      updatedSkills.splice(index, 1);
-      return {
-        ...prevData,
-        skills: updatedSkills
-      };
+    const updatedSkills = [...skills];
+    updatedSkills.splice(index, 1);
+    setFormData({
+      ...formData,
+      skills: updatedSkills
     });
   };
 
   const updateSkillCategory = (index: number, value: string): void => {
-    setFormData(prevData => {
-      const updatedSkills = [...prevData.skills];
-      updatedSkills[index].category = value;
-      return {
-        ...prevData,
-        skills: updatedSkills
-      };
+    const updatedSkills = [...skills];
+    updatedSkills[index] = {
+      ...updatedSkills[index],
+      category: value
+    };
+    setFormData({
+      ...formData,
+      skills: updatedSkills
     });
   };
 
   const updateSkills = (categoryIndex: number, value: string): void => {
-    setFormData(prevData => {
-      const updatedSkills = [...prevData.skills];
-      updatedSkills[categoryIndex].skillList = value;
-      return {
-        ...prevData,
-        skills: updatedSkills
-      };
+    const updatedSkills = [...skills];
+    updatedSkills[categoryIndex] = {
+      ...updatedSkills[categoryIndex],
+      skillList: value
+    };
+    setFormData({
+      ...formData,
+      skills: updatedSkills
     });
   };
 
