@@ -3,10 +3,9 @@ import * as pdfjsLib from 'pdfjs-dist';
 import EngineManager from "../lib/EngineManager";
 import Skeleton from "../components/Skeleton";
 import Toolbar from "../components/Toolbar";
-//import { latexGenerator } from "../lib/LaTeXService";
 import { FormData, Section } from "../types";
 import { TemplateFactory } from "@/lib/LaTeX/TemplateFactory";
-import { useResume } from '@/context/ResumeContext';
+import { useResume } from '@/lib/ResumeContext';
 
 interface CompilationQueueItem {
   resolve: (value: unknown) => void;
@@ -139,7 +138,6 @@ function Preview() {
     debounceTimerRef.current = window.setTimeout(() => {
       compileLaTeX()
         .then(() => {
-          console.log('Compilation completed successfully');
           setLocalPreviewState(prev => ({ ...prev, compiling: false }));
           
           // Start inactivity timer
@@ -376,8 +374,6 @@ function Preview() {
 
   const downloadPdf = (): void => {
     if (!pdfBuffer) return;
-
-    console.log(pdfBuffer);
     
     // Use the cached PDF buffer that's already in sync with what's displayed...
     const blob = new Blob([pdfBuffer], { type: 'application/pdf' });

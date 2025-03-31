@@ -4,7 +4,7 @@ import Button from "@/components/Button";
 import Separator from "@/components/Separator";
 import { Project, FormData } from "@/types";
 import RichTextbox from "@/components/RichTextbox";
-import { useResume } from '@/context/ResumeContext';
+import { useResume } from '@/lib/ResumeContext';
 
 function Projects() {
   const { formData, setFormData } = useResume();

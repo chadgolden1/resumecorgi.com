@@ -4,7 +4,7 @@ import Landing from './views/Landing'
 import Editor from '@/views/Editor'
 import Button from './components/Button'
 import Navbar from './components/Navbar'
-import { ResumeProvider } from '@/context/ResumeContext'
+import { ResumeProvider } from '@/lib/ResumeContext'
 
 function App() {
   const [viewState, setViewState] = useState('landing')
@@ -15,7 +15,7 @@ function App() {
 
   return (
     <ResumeProvider>
-      <div className={"bg-gray-50 dark:bg-zinc-900 /dark:bg-[oklch(0.176_0.0055_285.85)] overflow-hidden"}>
+      <div className={"bg-gray-50 dark:bg-zinc-900 overflow-hidden"}>
         <div className={"antialiased lg:subpixel-antialiased relative flex flex-col justify-center items-center min-h-screen mx-auto xl:px-0"}>
 
           {viewState === 'landing' && (
@@ -26,9 +26,9 @@ function App() {
           )}
 
           {viewState === 'editor' && (
-              <>
-                <Editor />
-              </>
+            <>
+              <Editor />
+            </>
           )}
 
           {viewState === 'not-found' && (

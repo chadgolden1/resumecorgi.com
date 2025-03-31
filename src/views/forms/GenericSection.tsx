@@ -4,7 +4,7 @@ import Input from '../../components/Input';
 import type { FormData, GenericSection as GenericSectionType } from '../../types';
 import Separator from '../../components/Separator';
 import RichTextbox from '../../components/RichTextbox';
-import { useResume } from '@/context/ResumeContext';
+import { useResume } from '@/lib/ResumeContext';
 
 interface GenericSectionProps {
   sectionId: string;

@@ -1,4 +1,4 @@
-import { JSX, useState, useEffect, useRef, useMemo } from 'react';
+import { JSX, useState, useRef, useMemo } from 'react';
 import Preview from './Preview';
 import PersonalInfo from './forms/PersonalInfo';
 import Experience from './forms/Experience';
@@ -7,9 +7,7 @@ import Card from '../components/Card';
 import Skills from './forms/Skills';
 import Button from '../components/Button';
 import ScrollSpy from '../components/ScrollSpy';
-import { FormData, Section } from '../types';
-import { loadFromStorage, saveToStorage, clearStorage } from '../lib/StorageService';
-import { moveTo, toggleSectionSelected } from '../lib/SortService';
+import { FormData } from '../types';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/AppSidebar';
 import Navbar from '@/components/Navbar';
@@ -17,7 +15,7 @@ import { createSectionsFromFormData, initialFormData, sampleFormData } from '@/l
 import Projects from './forms/Projects';
 import GenericSection from './forms/GenericSection';
 import { downloadResumeAsJson } from '@/lib/ImportExportService';
-import { useResume } from '@/context/ResumeContext';
+import { useResume } from '@/lib/ResumeContext';
 
 interface SectionRenderItem {
   id: string;
@@ -33,16 +31,9 @@ function Editor() {
   const {
     formData,
     sections,
-    selectedTemplate,
     setFormData,
     setSections,
   } = useResume();
-
-  // Save data to localStorage whenever it changes
-  useEffect(() => {
-    const templateId: string = selectedTemplate.id;
-    saveToStorage({ formData, sections, templateId });
-  }, [formData, sections, selectedTemplate]);
 
   const sectionRenderMapping = useMemo<SectionRenderItem[]>(() => [
     {
@@ -105,7 +96,6 @@ function Editor() {
           <Card>
             <GenericSection
               sectionId={sectionId}
-              section={section}
               onTitleChange={(title) => {
                 // When a generic section title changes, update the corresponding section's displayName
                 const updatedSections = sections.map(section => 
@@ -117,15 +107,7 @@ function Editor() {
           </Card>
         </>
     })))
-  ], [formData]);
-
-  // reactive mapping of section IDs to their titles
-  const sectionTitles = useMemo<Record<string, string>>(() => {
-    return sectionRenderMapping.reduce((acc, item) => {
-      acc[item.id] = item.title;
-      return acc;
-    }, {} as Record<string, string>);
-  }, [sectionRenderMapping]);
+  ], [formData, sections, setSections]);
 
   const resetToDefaults = () => {
     if (!window.confirm('Are you sure you want to reset all your data? This cannot be undone.')) {

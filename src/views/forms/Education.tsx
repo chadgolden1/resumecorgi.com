@@ -4,7 +4,7 @@ import Input from '../../components/Input';
 import RichTextbox from '../../components/RichTextbox';
 import { FormData, Education as EducationInfo } from '../../types';
 import Separator from '../../components/Separator';
-import { useResume } from '@/context/ResumeContext';
+import { useResume } from '@/lib/ResumeContext';
 
 function Education() {
   const { formData, setFormData } = useResume();

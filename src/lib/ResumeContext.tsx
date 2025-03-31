@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { FormData, Section } from '../types';
-import { loadFromStorage, saveToStorage } from '../lib/StorageService';
+import { loadFromStorage, saveToStorage } from './StorageService';
 import { TemplateFactory, TemplateInfo } from '@/lib/LaTeX/TemplateFactory';
 
 interface ResumeContextType {
@@ -29,10 +29,13 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     TemplateFactory.getAvailableTemplates().find(t => t.id === savedTemplateId) || TemplateFactory.getAvailableTemplates()[0]
   );
 
-  // Save data to localStorage whenever it changes
   useEffect(() => {
-    const templateId: string = selectedTemplate.id;
-    saveToStorage({ formData, sections, templateId });
+    persistChangesOnChange();
+
+    function persistChangesOnChange() {
+      const templateId: string = selectedTemplate.id;
+      saveToStorage({ formData, sections, templateId });
+    }
   }, [formData, sections, selectedTemplate]);
 
   const handleChange = (section: string, field: string, value: string | string[]): void => {

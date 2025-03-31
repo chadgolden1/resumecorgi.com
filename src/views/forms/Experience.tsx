@@ -4,7 +4,7 @@ import Input from '../../components/Input.js'
 import RichTextbox from '../../components/RichTextbox.js';
 import { FormData, Experience as ExperienceInfo } from '../../types';
 import Separator from '../../components/Separator.js';
-import { useResume } from '@/context/ResumeContext';
+import { useResume } from '@/lib/ResumeContext.js';
 
 function Experience() {
   const { formData, setFormData } = useResume();

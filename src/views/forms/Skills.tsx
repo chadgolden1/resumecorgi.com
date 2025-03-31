@@ -3,7 +3,7 @@ import Button from '../../components/Button';
 import Input from '../../components/Input';
 import { FormData, Skill } from '../../types';
 import Separator from '../../components/Separator';
-import { useResume } from '@/context/ResumeContext';
+import { useResume } from '@/lib/ResumeContext';
 
 function Skills() {
   const { formData, setFormData } = useResume();

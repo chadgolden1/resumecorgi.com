@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { ResumeImporter } from "./ResumeImporter";
 import { FormData } from "@/types";
 import { TemplateSwitcher } from "./TemplateSwitcher";
-import { useResume } from '@/context/ResumeContext';
+import { useResume } from '@/lib/ResumeContext';
 
 interface SidebarProps {
   resetData?: () => void;

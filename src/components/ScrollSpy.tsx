@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useResume } from '@/context/ResumeContext';
+import { useResume } from '@/lib/ResumeContext';
 
 interface ScrollSpyProps {
   containerRef: React.RefObject<HTMLDivElement | null>;

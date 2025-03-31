@@ -3,7 +3,7 @@ import Input from '../../components/Input';
 import Textbox from '../../components/Textbox';
 import { PersonalInfo as PersonalInfoData, FormData } from '../../types';
 import Button from '../../components/Button';
-import { useResume } from '@/context/ResumeContext';
+import { useResume } from '@/lib/ResumeContext';
 
 function PersonalInfo() {
   const { formData, handleChange } = useResume();

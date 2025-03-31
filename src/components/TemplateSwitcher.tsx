@@ -12,7 +12,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { TemplateFactory } from "@/lib/LaTeX/TemplateFactory"
-import { useResume } from '@/context/ResumeContext';
+import { useResume } from '@/lib/ResumeContext';
 
 const templates = TemplateFactory.getAvailableTemplates();
 
