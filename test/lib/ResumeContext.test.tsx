@@ -215,7 +215,7 @@ describe('ResumeContext', () => {
     const sectionsEl = screen.getByTestId('sections');
     const updatedSections = JSON.parse(sectionsEl.textContent!);
     
-    const educationSection = updatedSections.find((s: any) => s.id === 'education');
+    const educationSection = updatedSections.find((s: { id: string }) => s.id === 'education');
     expect(educationSection.selected).toBe(false);
     expect(saveToStorage).toHaveBeenCalled();
   });
@@ -236,7 +236,7 @@ describe('ResumeContext', () => {
     const updatedSections = JSON.parse(sectionsEl.textContent!);
     
     expect(updatedSections.length).toBe(2);
-    expect(updatedSections.find((s: any) => s.id === 'skills')).toBeUndefined();
+    expect(updatedSections.find((s: { id: string }) => s.id === 'skills')).toBeUndefined();
     expect(saveToStorage).toHaveBeenCalled();
   });
 
@@ -288,7 +288,7 @@ describe('ResumeContext', () => {
     
     // Check if a new section was added to sections
     expect(updatedSections.length).toBe(4);
-    const newSection = updatedSections.find((s: any) => s.id === 'genericSection1');
+    const newSection = updatedSections.find((s: { id: string }) => s.id === 'genericSection1');
     expect(newSection).toBeDefined();
     expect(newSection.displayName).toBe('New Section');
     expect(newSection.selected).toBe(true);
