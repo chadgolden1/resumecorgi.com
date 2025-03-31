@@ -82,8 +82,8 @@ function Preview() {
 
     if (pdfViewerArea) {
       resizeObserver.observe(pdfViewerArea);
-      resizeObserver.observe(document.body);
     }
+    resizeObserver.observe(document.body);
 
     // Use JSON.stringify for deep comparison
     const currentFormDataString = JSON.stringify(formData);
@@ -163,9 +163,9 @@ function Preview() {
       }
       
       if (pdfViewerArea) {
-        resizeObserver.unobserve(document.body);
         resizeObserver.unobserve(pdfViewerArea);
       }
+      resizeObserver.unobserve(document.body);
       resizeObserver.disconnect();
 
       // Cancel any in-progress compilation
@@ -207,6 +207,7 @@ function Preview() {
       
       if (!mounted) {
         isProcessing.current = false;
+        reject(new Error('Component unmounted'));
         processQueue(); // Process next in queue
         return;
       }
@@ -219,6 +220,7 @@ function Preview() {
       
       if (!mounted) {
         isProcessing.current = false;
+        reject(new Error('Component unmounted'));
         processQueue(); // Process next in queue
         return;
       }
@@ -233,6 +235,7 @@ function Preview() {
       loadingTask.promise.then(pdf => {
         if (!mounted) {
           isProcessing.current = false;
+          reject(new Error('Component unmounted'));
           processQueue(); // Process next in queue
           return;
         }
@@ -251,6 +254,7 @@ function Preview() {
       }).catch(error => {
         if (!mounted) {
           isProcessing.current = false;
+          reject(new Error('Component unmounted'));
           processQueue(); // Process next in queue
           return;
         }
