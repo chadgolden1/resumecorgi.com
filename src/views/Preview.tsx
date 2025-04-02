@@ -28,6 +28,12 @@ interface PreviewState {
   compiling: boolean;
 }
 
+interface PageCanvas {
+  canvas: HTMLCanvasElement;
+  pageNum: number;
+  rendered: boolean;
+}
+
 function Preview() {
   const { formData, sections, selectedTemplate } = useResume();
   const scale = 1;
@@ -42,8 +48,8 @@ function Preview() {
   const typingModeTimerRef = useRef<number | null>(null);
   const isTypingRef = useRef<boolean>(false);
   
-  const activeCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  const displayCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  // Reference to hold all the page canvases
+  const pageCanvasesRef = useRef<Map<number, PageCanvas>>(new Map());
   const canvasContainerRef = useRef<HTMLDivElement | null>(null);
   
   const cleanupRef = useRef<(() => void) | null>(null);
@@ -62,14 +68,11 @@ function Preview() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [pdfBuffer, setPdfBuffer] = useState<ArrayBuffer | null>(null);
   const [pdfDoc, setPdfDoc] = useState<unknown>(null);
-  const [pageRendered, setPageRendered] = useState<boolean>(false);
-  const [pageRendering, setPageRendering] = useState<boolean>(false);
-  const [pageNumPending, setPageNumPending] = useState<number | null>(null);
   const [numPages, setNumPages] = useState<number>(0);
-  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pagesRendered, setPagesRendered] = useState<number[]>([]);
   const [canvasWidthPx, setCanvasWidthPx] = useState<number>(MAX_WIDTH);
   const [shouldRerender, setShouldRerender] = useState<boolean>(false);
-
+  const [renderingPage, setRenderingPage] = useState<number | null>(null);
 
   // Use memoized LaTeX to avoid recreating it on every render
   const compiledLaTeX = useMemo(() => {
@@ -163,10 +166,16 @@ function Preview() {
     };
   }, [canvasWidthPx]);
 
+  // Effect to handle re-rendering on resize
   useEffect(() => {
     // Only rerender if we have a PDF loaded
-    if (pdfDoc && currentPage > 0 && pageRendered && !pageRendering) {
-      renderPage(pdfDoc, currentPage);
+    if (pdfDoc && numPages > 0) {
+      // Re-render all pages when width changes
+      for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+        if (pagesRendered.includes(pageNum)) {
+          renderPage(pdfDoc, pageNum);
+        }
+      }
     }
   }, [shouldRerender, pdfDoc, canvasWidthPx]);
 
@@ -181,7 +190,7 @@ function Preview() {
   
     // Skip if data hasn't changed
     if (
-      pageRendered && 
+      pagesRendered.length > 0 && 
       currentFormDataString === prevFormDataString &&
       currentSelectedSectionsString === prevSelectedSectionsString &&
       prevTemplateRef.current === selectedTemplate.id
@@ -292,7 +301,7 @@ function Preview() {
       // Cancel any in-progress compilation
       cleanupRef.current?.();
     };
-  }, [formData, sections, compiledLaTeX, pageRendered, selectedTemplate.id]);
+  }, [formData, sections, compiledLaTeX, selectedTemplate.id, pagesRendered.length]);
 
   // Process a compilation job
   const processCompilationJob = async (job: CompilationJob): Promise<void> => {
@@ -349,6 +358,9 @@ function Preview() {
         console.error(result.log);
       }
       
+      // Reset the pages rendered state
+      setPagesRendered([]);
+      
       // Load the PDF
       const cachedBuffer = result.pdf.buffer.slice(0);
       const loadingTask = pdfjsLib.getDocument({ data: result.pdf.buffer });
@@ -364,9 +376,14 @@ function Preview() {
         setPdfBuffer(cachedBuffer);
         setPdfDoc(pdf);
         setNumPages(pdf.numPages);
-        renderPage(pdf, 1);
+        
+        // Clear existing canvases when we get a new PDF
+        pageCanvasesRef.current.clear();
+        
+        // Render all pages
+        renderAllPages(pdf);
+        
         setIsLoading(false);
-
         
         // Calculate compilation time and update adaptive debounce
         const compilationTime = Date.now() - compilationStartTime;
@@ -389,7 +406,6 @@ function Preview() {
         console.error('Error loading PDF:', error);
         setError(`Error loading PDF: ${error.message}`);
         setIsLoading(false);
-
         
         // Reject the job's promise
         job.reject(error);
@@ -404,7 +420,6 @@ function Preview() {
         console.error("Failed to compile LaTeX:", err);
         setError(`Failed to compile LaTeX: ${err?.message}`);
         setIsLoading(false);
-
         
         // Reject the job's promise
         job.reject(err);
@@ -429,103 +444,83 @@ function Preview() {
     }
   };
 
+  // Render all pages from the PDF sequentially
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const renderAllPages = async (pdf: any): Promise<void> => {
+    // Render pages one at a time
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      await renderPage(pdf, pageNum);
+    }
+  };
+
   // Render a page from the PDF
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const renderPage = (pdf: any, pageNum: number): void => {
-    // If a render is in progress and we're trying to render the same page,
-    // mark it as pending but don't start a new render
-    if (pageRendering && currentPage === pageNum) {
+  const renderPage = async (pdf: any, pageNum: number): Promise<void> => {
+    // If already rendering this page, don't start another render
+    if (renderingPage === pageNum) {
       return;
     }
     
-    // If rendering a different page, set as pending
-    if (pageRendering) {
-      setPageNumPending(pageNum);
-      return;
-    }
-  
-    setPageRendering(true);
+    setRenderingPage(pageNum);
     
-    // Using promise to fetch the page
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    pdf.getPage(pageNum).then((page: any) => {
-      // Use the hidden active canvas for rendering
-      const canvas = activeCanvasRef.current;
-  
-      if (!canvas) {
-        setPageRendering(false);
-        return;
+    try {
+      // Get the page from the PDF
+      const page = await pdf.getPage(pageNum);
+      
+      // Create a canvas for this page if it doesn't exist
+      let pageCanvas = pageCanvasesRef.current.get(pageNum);
+      if (!pageCanvas) {
+        const canvas = document.createElement('canvas');
+        canvas.className = 'page-canvas mx-auto bg-white shadow-md dark:shadow-lg shadow-gray-800 dark:shadow-zinc-700';
+        pageCanvas = { canvas, pageNum, rendered: false };
+        pageCanvasesRef.current.set(pageNum, pageCanvas);
       }
-  
-      const ctx = canvas.getContext('2d');
+      
+      // Use higher resolution for better quality
+      const resolution = 2.5;
+      const viewport = page.getViewport({ scale });
+      
+      // Set canvas dimensions directly on the page canvas
+      pageCanvas.canvas.width = resolution * viewport.width;
+      pageCanvas.canvas.height = resolution * viewport.height;
+      pageCanvas.canvas.style.width = "100%";
+      pageCanvas.canvas.style.maxWidth = `${canvasWidthPx}px`;
+      
+      const ctx = pageCanvas.canvas.getContext('2d');
       if (!ctx) {
-        setPageRendering(false);
-        return;
+        throw new Error('Could not get canvas context');
       }
       
       ctx.imageSmoothingQuality = 'high';
       ctx.imageSmoothingEnabled = false;
       
-      const resolution = 2.5;
-      const viewport = page.getViewport({ scale });
-      canvas.height = resolution * viewport.height;
-      canvas.width = resolution * viewport.width;
+      // Clear canvas
+      ctx.clearRect(0, 0, pageCanvas.canvas.width, pageCanvas.canvas.height);
       
-      // Render PDF page into canvas context
+      // Render PDF page directly into the page canvas
       const renderContext = {
         canvasContext: ctx,
         viewport: viewport,
         transform: [resolution, 0, 0, resolution, 0, 0]
       };
-  
-      const renderTask = page.render(renderContext);
       
       // Wait for rendering to finish
-      renderTask.promise.then(() => {
-        // When render is complete, swap the canvas contents to the display canvas
-        const displayCanvas = displayCanvasRef.current;
-        if (displayCanvas) {
-          // Match the dimensions
-          displayCanvas.width = canvas.width;
-          displayCanvas.height = canvas.height;
-          displayCanvas.style.width = "100%";
-          displayCanvas.style.maxWidth = `${canvasWidthPx}px`;
-          
-          // Copy content from active canvas to display canvas
-          const displayCtx = displayCanvas.getContext('2d');
-          if (displayCtx) {
-            displayCtx.drawImage(canvas, 0, 0);
-          }
+      await page.render(renderContext).promise;
+      
+      pageCanvas.rendered = true;
+      
+      // Update the state to show this page is rendered
+      setPagesRendered(prev => {
+        if (!prev.includes(pageNum)) {
+          return [...prev, pageNum].sort((a, b) => a - b);
         }
-        
-        setPageRendered(true);
-        setPageRendering(false);
-        
-        if (pageNumPending !== null) {
-          // New page rendering is pending
-          renderPage(pdfDoc, pageNumPending);
-          setPageNumPending(null);
-        }
-      }).catch((error: Error) => {
-        console.error('Error rendering page:', error);
-        setPageRendering(false);
+        return prev;
       });
-    }).catch((error: Error) => {
-      console.error('Error getting page:', error);
-      setPageRendering(false);
-    });
-  
-    setCurrentPage(pageNum);
-  };
-
-  const previousPage = (): void => {
-    if (currentPage <= 1 || !pdfDoc) return;
-    renderPage(pdfDoc, currentPage - 1);
-  };
-
-  const nextPage = (): void => {
-    if (currentPage >= numPages || !pdfDoc) return;
-    renderPage(pdfDoc, currentPage + 1);
+    } catch (error) {
+      console.error(`Error rendering page ${pageNum}:`, error);
+    } finally {
+      setRenderingPage(null);
+    }
   };
 
   const downloadPdf = (): void => {
@@ -559,6 +554,44 @@ function Preview() {
     URL.revokeObjectURL(url);
   };
 
+  // Effect to manage canvas rendering and DOM manipulation outside of React's control
+  useEffect(() => {
+    // Clean up function to remove all canvases that we added to the container
+    return () => {
+      Array.from(pageCanvasesRef.current.values()).forEach(pageCanvas => {
+        if (document.body.contains(pageCanvas.canvas)) {
+          document.body.removeChild(pageCanvas.canvas);
+        }
+      });
+    };
+  }, []);
+  
+  // Effect to update the DOM with canvases when pages are rendered
+  useEffect(() => {
+    if (error || pagesRendered.length === 0) return;
+    
+    // Get the container element
+    const container = canvasContainerRef.current;
+    if (!container) return;
+    
+    // Clear previous content
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
+    
+    // Add all rendered page canvases to the container
+    Array.from(pageCanvasesRef.current.values())
+      .sort((a, b) => a.pageNum - b.pageNum)
+      .forEach(pageCanvas => {
+        if (pageCanvas.rendered) {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'page-container mb-3';
+          wrapper.appendChild(pageCanvas.canvas);
+          container.appendChild(wrapper);
+        }
+      });
+  }, [pagesRendered, error]);
+  
   return (
     <>
       <h2 className="text-lg sr-only">PDF Preview</h2>
@@ -567,11 +600,7 @@ function Preview() {
         <Toolbar 
           error={error} 
           isLoading={isLoading} 
-          pageRendered={pageRendered} 
-          currentPage={currentPage}
-          totalPages={numPages}
-          onPrevious={previousPage}
-          onNext={nextPage}
+          pageRendered={pagesRendered.length > 0}
           onDownloadPdf={downloadPdf}
           onDownloadLaTeX={downloadLaTeX}
         />
@@ -579,27 +608,18 @@ function Preview() {
 
       <div id="pdf-viewer-area" className="pdf-viewer flex justify-center items-center w-full mt-3">
         <div ref={canvasContainerRef} className="grow canvas-container relative px-4 lg:px-3 w-auto">
-
-          {/* Display canvas - always visible */}
-          {!error && (
-            <>
-              <canvas
-                ref={displayCanvasRef}
-                style={{ width: canvasWidthPx + "px" }}
-                className={`mx-auto bg-white shadow-md dark:shadow-lg shadow-gray-800 dark:shadow-zinc-700 ${!pageRendered ? 'hidden' : ''}`}
-              ></canvas>
-            </>
+          {isLoading || pagesRendered.length === 0 && (
+            <Skeleton width={"100%"} />
           )}
           
-          {/* Active canvas - hidden, used for rendering */}
-          <canvas 
-            ref={activeCanvasRef}
-            style={{ width: canvasWidthPx + "px" }}
-            className="hidden"
-          ></canvas>
+          {/* Error display */}
+          {error && (
+            <div className="error-message text-red-600 p-4 text-center">
+              {error}
+            </div>
+          )}
           
-          {/* Only show skeleton when no canvas has been rendered yet */}
-          {(isLoading && !pageRendered) && <Skeleton width={"100%"} />}
+          {/* The canvases will be appended here by the useEffect */}
         </div>
       </div>
     </>
