@@ -73,6 +73,8 @@ function Preview() {
   const [canvasWidthPx, setCanvasWidthPx] = useState<number>(MAX_WIDTH);
   const [shouldRerender, setShouldRerender] = useState<boolean>(false);
   const [renderingPage, setRenderingPage] = useState<number | null>(null);
+  const [containerHeight, setContainerHeight] = useState<number | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   // Use memoized LaTeX to avoid recreating it on every render
   const compiledLaTeX = useMemo(() => {
@@ -197,6 +199,8 @@ function Preview() {
     ) {
       return;
     }
+
+    preserveContainerHeight();
     
     // Store current values for next comparison
     prevFormDataRef.current = JSON.parse(currentFormDataString);
@@ -466,7 +470,7 @@ function Preview() {
     try {
       // Get the page from the PDF
       const page = await pdf.getPage(pageNum);
-      
+
       // Create a canvas for this page if it doesn't exist
       let pageCanvas = pageCanvasesRef.current.get(pageNum);
       if (!pageCanvas) {
@@ -591,7 +595,22 @@ function Preview() {
         }
       });
   }, [pagesRendered, error]);
+
+  useEffect(() => {
+    if (!isLoading && pagesRendered.length > 0) {
+      // Clear fixed height once content is rendered
+      setTimeout(() => {
+        setContainerHeight(null);
+      }, 100);
+    }
+  }, [isLoading, pagesRendered.length]);
   
+  const preserveContainerHeight = () => {
+    if (containerRef.current && containerRef.current.offsetHeight > 0) {
+      setContainerHeight(containerRef.current.offsetHeight);
+    }
+  };
+
   return (
     <>
       <h2 className="text-lg sr-only">PDF Preview</h2>
@@ -607,8 +626,13 @@ function Preview() {
       </div>
 
       <div id="pdf-viewer-area" className="pdf-viewer flex justify-center items-center w-full mt-3">
-        <div ref={canvasContainerRef} className="grow canvas-container relative px-4 lg:px-3 w-auto">
-          {isLoading || pagesRendered.length === 0 && (
+        <div ref={(node) => {
+          containerRef.current = node;
+          canvasContainerRef.current = node;
+        }}
+        className="grow canvas-container relative px-4 lg:px-3 w-auto"
+        style={containerHeight ? { height: `${containerHeight}px`, minHeight: `${containerHeight}px` } : {}}>
+          {isLoading && pagesRendered.length === 0 && (
             <Skeleton width={"100%"} />
           )}
           
