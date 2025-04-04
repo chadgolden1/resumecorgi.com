@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import * as pdfjsLib from 'pdfjs-dist';
+import { PDFDocumentProxy, PDFDocumentLoadingTask } from "pdfjs-dist";
 import EngineManager from "../lib/EngineManager";
 import Skeleton from "../components/Skeleton";
 import Toolbar from "../components/Toolbar";
@@ -67,7 +68,7 @@ function Preview() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [pdfBuffer, setPdfBuffer] = useState<ArrayBuffer | null>(null);
-  const [pdfDoc, setPdfDoc] = useState<unknown>(null);
+  const [pdfDoc, setPdfDoc] = useState<PDFDocumentProxy | null>(null);
   const [numPages, setNumPages] = useState<number>(0);
   const [pagesRendered, setPagesRendered] = useState<number[]>([]);
   const [canvasWidthPx, setCanvasWidthPx] = useState<number>(MAX_WIDTH);
@@ -367,7 +368,7 @@ function Preview() {
       
       // Load the PDF
       const cachedBuffer = result.pdf.buffer.slice(0);
-      const loadingTask = pdfjsLib.getDocument({ data: result.pdf.buffer });
+      const loadingTask: PDFDocumentLoadingTask = pdfjsLib.getDocument({ data: result.pdf.buffer });
       
       loadingTask.promise.then(pdf => {
         if (!mounted || job.isCancelled) {
@@ -450,7 +451,7 @@ function Preview() {
 
   // Render all pages from the PDF sequentially
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const renderAllPages = async (pdf: any): Promise<void> => {
+  const renderAllPages = async (pdf: PDFDocumentProxy): Promise<void> => {
     // Render pages one at a time
     for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
       await renderPage(pdf, pageNum);
@@ -459,7 +460,7 @@ function Preview() {
 
   // Render a page from the PDF
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const renderPage = async (pdf: any, pageNum: number): Promise<void> => {
+  const renderPage = async (pdf: PDFDocumentProxy, pageNum: number): Promise<void> => {
     // If already rendering this page, don't start another render
     if (renderingPage === pageNum) {
       return;
@@ -476,7 +477,7 @@ function Preview() {
       if (!pageCanvas) {
         const canvas = document.createElement('canvas');
         canvas.className = 'page-canvas mx-auto bg-white shadow-md dark:shadow-lg shadow-gray-800 dark:shadow-zinc-700';
-        pageCanvas = { canvas, pageNum, rendered: false };
+        pageCanvas = { canvas, pageNum, rendered: true };
         pageCanvasesRef.current.set(pageNum, pageCanvas);
       }
       
@@ -495,23 +496,21 @@ function Preview() {
         throw new Error('Could not get canvas context');
       }
       
-      ctx.imageSmoothingQuality = 'high';
-      ctx.imageSmoothingEnabled = false;
-      
-      // Clear canvas
-      ctx.clearRect(0, 0, pageCanvas.canvas.width, pageCanvas.canvas.height);
+      // TODO: clear canvas?
+      //ctx.clearRect(0, 0, pageCanvas.canvas.width, pageCanvas.canvas.height);
       
       // Render PDF page directly into the page canvas
       const renderContext = {
         canvasContext: ctx,
         viewport: viewport,
-        transform: [resolution, 0, 0, resolution, 0, 0]
+        transform: [resolution, 0, 0, resolution, 0, 0],
+        renderInteractiveForms: false,
+        enableXfa: false,
+        intent: 'display'
       };
-      
+
       // Wait for rendering to finish
       await page.render(renderContext).promise;
-      
-      pageCanvas.rendered = true;
       
       // Update the state to show this page is rendered
       setPagesRendered(prev => {
@@ -520,6 +519,8 @@ function Preview() {
         }
         return prev;
       });
+
+      pageCanvas.rendered = true;
     } catch (error) {
       console.error(`Error rendering page ${pageNum}:`, error);
     } finally {
@@ -574,26 +575,30 @@ function Preview() {
   useEffect(() => {
     if (error || pagesRendered.length === 0) return;
     
-    // Get the container element
-    const container = canvasContainerRef.current;
-    if (!container) return;
-    
     // Clear previous content
-    while (container.firstChild) {
-      container.removeChild(container.firstChild);
+    refreshContent(); 
+
+    function refreshContent() {
+      const container = canvasContainerRef.current;
+      if (!container) return;
+
+      
+      while (container.firstChild) {
+        container.removeChild(container.firstChild);
+      }
+
+      // Add all rendered page canvases to the container
+      Array.from(pageCanvasesRef.current.values())
+        .sort((a, b) => a.pageNum - b.pageNum)
+        .forEach(pageCanvas => {
+          if (pageCanvas.rendered) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'page-container mb-3';
+            wrapper.appendChild(pageCanvas.canvas);
+            container.appendChild(wrapper);
+          }
+        });
     }
-    
-    // Add all rendered page canvases to the container
-    Array.from(pageCanvasesRef.current.values())
-      .sort((a, b) => a.pageNum - b.pageNum)
-      .forEach(pageCanvas => {
-        if (pageCanvas.rendered) {
-          const wrapper = document.createElement('div');
-          wrapper.className = 'page-container mb-3';
-          wrapper.appendChild(pageCanvas.canvas);
-          container.appendChild(wrapper);
-        }
-      });
   }, [pagesRendered, error]);
 
   useEffect(() => {
@@ -619,7 +624,7 @@ function Preview() {
         <Toolbar 
           error={error} 
           isLoading={isLoading} 
-          pageRendered={pagesRendered.length > 0}
+          pageRendered={pdfDoc !== null}
           onDownloadPdf={downloadPdf}
           onDownloadLaTeX={downloadLaTeX}
         />
@@ -632,7 +637,7 @@ function Preview() {
         }}
         className="grow canvas-container relative px-4 lg:px-3 w-auto"
         style={containerHeight ? { height: `${containerHeight}px`, minHeight: `${containerHeight}px` } : {}}>
-          {isLoading && pagesRendered.length === 0 && (
+          {pdfDoc === null && (
             <Skeleton width={"100%"} />
           )}
           
