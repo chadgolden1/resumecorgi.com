@@ -361,6 +361,7 @@ function Preview() {
       
       if (result.status !== 0) {
         console.error(result.log);
+        throw new Error(result.log);
       }
       
       // Reset the pages rendered state
@@ -422,8 +423,8 @@ function Preview() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       if (mounted && !job.isCancelled) {
-        console.error("Failed to compile LaTeX:", err);
-        setError(`Failed to compile LaTeX: ${err?.message}`);
+        console.error("Failed to compile LaTeX:\n", err);
+        setError(`Failed to compile LaTeX:\n ${err?.message}`);
         setIsLoading(false);
         
         // Reject the job's promise
@@ -630,22 +631,28 @@ function Preview() {
         />
       </div>
 
-      <div id="pdf-viewer-area" className="pdf-viewer flex justify-center items-center w-full mt-3">
+      {/* Error display */}
+      {error && (
+        <div className="relative error-message text-red-200 dark:text-red-300 p-4 max-w-[800px] mx-auto text-sm">
+          <h3 className="text-lg font-bold mb-3">Compiler Error</h3>
+          <pre>
+            <p>
+              {error}
+            </p>
+          </pre>
+        </div>
+      )}
+
+      <div id="pdf-viewer-area" className="pdf-viewer flex justify-center items-center w-full mt-3"
+        hidden={error !== null}>
         <div ref={(node) => {
           containerRef.current = node;
           canvasContainerRef.current = node;
         }}
         className="grow canvas-container relative px-4 lg:px-3 w-auto"
         style={containerHeight ? { height: `${containerHeight}px`, minHeight: `${containerHeight}px` } : {}}>
-          {pdfDoc === null && (
+          {!error && pdfDoc === null && (
             <Skeleton width={"100%"} />
-          )}
-          
-          {/* Error display */}
-          {error && (
-            <div className="error-message text-red-600 p-4 text-center">
-              {error}
-            </div>
           )}
           
           {/* The canvases will be appended here by the useEffect */}
