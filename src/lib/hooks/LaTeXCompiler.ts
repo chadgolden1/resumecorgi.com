@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 import { PDFDocumentLoadingTask } from "pdfjs-dist";
 import EngineManager from "@/lib/EngineManager";
@@ -159,12 +159,17 @@ export const useLatexCompilation = (
         cleanup();
         processNextJob();
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : String(err);
+
+
       if (mounted && !job.isCancelled) {
         console.error("Failed to compile LaTeX:\n", err);
         setResult(prev => ({
           ...prev,
-          error: `Failed to compile LaTeX:\n ${err?.message}`,
+          error: `Failed to compile LaTeX:\n ${errorMessage}`,
           isCompiling: false
         }));
         

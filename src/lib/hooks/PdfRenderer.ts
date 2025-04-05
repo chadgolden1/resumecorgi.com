@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist';
 
 interface PdfRenderResult {

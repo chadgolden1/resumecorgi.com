@@ -12,9 +12,8 @@ interface AdaptiveDebounceResult {
   updateCompilationTime: (time: number) => void;
   isTyping: () => boolean;
   startTypingMode: () => void;
-  debounce: <T extends (...args: any[]) => any>(
+  debounce: <T extends (...args: unknown[]) => unknown>(
     fn: T,
-    dependencies?: React.DependencyList
   ) => (...args: Parameters<T>) => void;
 }
 
@@ -95,9 +94,8 @@ export const useAdaptiveDebounce = (
   /**
    * Creates a debounced version of the provided function
    */
-  const debounce = useCallback(<T extends (...args: any[]) => any>(
+  const debounce = useCallback(<T extends (...args: unknown[]) => unknown>(
     fn: T,
-    dependencies: React.DependencyList = []
   ) => {
     return (...args: Parameters<T>) => {
       // Start typing mode
