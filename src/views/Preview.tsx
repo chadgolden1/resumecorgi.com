@@ -139,11 +139,11 @@ function Preview() {
         hidden={error !== null}>
         <div 
           ref={containerRef}
-          className="grow canvas-container relative px-4 lg:px-3 w-auto"
+          className="grow canvas-container relative px-4 lg:px-3 w-auto pb-20"
           style={containerHeight ? { height: `${containerHeight}px`, minHeight: `${containerHeight}px` } : {}}
         >
-          {/* Show skeleton while loading */}
-          {!error && pdfDoc === null && (
+          {/* Show skeleton intially only when there's no content at all */}
+          {!error && !pdfDoc && !pagesRendered.length && (
             <Skeleton width={"100%"} />
           )}
           

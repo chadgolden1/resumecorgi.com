@@ -1,12 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist';
 
-interface PageCanvas {
-  canvas: HTMLCanvasElement;
-  pageNum: number;
-  rendered: boolean;
-}
-
 interface PdfRenderResult {
   pagesRendered: number[];
   isRendering: boolean;
@@ -25,45 +19,43 @@ export const usePdfRenderer = (
 ): PdfRenderResult => {
   const [pagesRendered, setPagesRendered] = useState<number[]>([]);
   const [isRendering, setIsRendering] = useState<boolean>(false);
-  const [renderingPage, setRenderingPage] = useState<number | null>(null);
-  
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const pageCanvasesRef = useRef<Map<number, PageCanvas>>(new Map());
+  const renderingRef = useRef<{
+    inProgress: boolean;
+    buffer: HTMLDivElement | null;
+    activeBuffer: HTMLDivElement | null;
+  }>({
+    inProgress: false,
+    buffer: null,
+    activeBuffer: null
+  });
 
   /**
-   * Render a specific page from the PDF
+   * Render a single PDF page to a canvas element
    */
-  const renderPage = useCallback(async (pageNum: number): Promise<void> => {
-    if (!pdfDoc || renderingPage === pageNum) {
-      return;
-    }
-    
-    setRenderingPage(pageNum);
-    setIsRendering(true);
-    
+  const renderPageToCanvas = useCallback(async (
+    pageNum: number, 
+    pdfDoc: PDFDocumentProxy
+  ): Promise<HTMLCanvasElement | null> => {
     try {
+      // Get the page from the PDF
       const page: PDFPageProxy = await pdfDoc.getPage(pageNum);
-
-      let pageCanvas = pageCanvasesRef.current.get(pageNum);
-      if (!pageCanvas) {
-        const canvas = document.createElement('canvas');
-        canvas.className = 'page-canvas mx-auto bg-white shadow-md dark:shadow-lg shadow-gray-800 dark:shadow-zinc-700';
-        pageCanvas = { canvas, pageNum, rendered: false };
-        pageCanvasesRef.current.set(pageNum, pageCanvas);
-      }
+      const canvas = document.createElement('canvas');
+      canvas.className = 'page-canvas mx-auto bg-white shadow-md dark:shadow-lg shadow-gray-800 dark:shadow-zinc-700';
+      canvas.setAttribute('data-page', pageNum.toString());
       
       const resolution = 2.5;
       const viewport = page.getViewport({ scale: 1 });
-      pageCanvas.canvas.width = resolution * viewport.width;
-      pageCanvas.canvas.height = resolution * viewport.height;
-      pageCanvas.canvas.style.width = "100%";
-      pageCanvas.canvas.style.maxWidth = `${canvasWidth}px`;
+      canvas.width = resolution * viewport.width;
+      canvas.height = resolution * viewport.height;
+      canvas.style.width = "100%";
+      canvas.style.maxWidth = `${canvasWidth}px`;
       
-      const ctx = pageCanvas.canvas.getContext('2d');
+      const ctx = canvas.getContext('2d');
       if (!ctx) {
         throw new Error('Could not get canvas context');
       }
-      
+
       const renderContext = {
         canvasContext: ctx,
         viewport: viewport,
@@ -76,86 +68,198 @@ export const usePdfRenderer = (
       // Wait for rendering to finish
       await page.render(renderContext).promise;
       
-      pageCanvas.rendered = true;
-      
-      if (containerRef.current) {
-        const existingWrapper = containerRef.current.querySelector(`[data-page="${pageNum}"]`);
-        
-        if (!existingWrapper) {
-          const wrapper = document.createElement('div');
-          wrapper.className = 'page-container mb-3';
-          wrapper.setAttribute('data-page', pageNum.toString());
-          wrapper.appendChild(pageCanvas.canvas);
-          containerRef.current.appendChild(wrapper);
-        }
+      return canvas;
+    } catch (error) {
+      console.error(`Error rendering page ${pageNum}:`, error);
+      return null;
+    }
+  }, [canvasWidth]);
+
+  /**
+   * Prepare a fresh buffer div for the new content
+   */
+  const prepareBuffer = useCallback(() => {
+    // Create a new buffer div for rendering
+    const bufferDiv = document.createElement('div');
+    bufferDiv.className = 'pdf-buffer';
+    bufferDiv.style.width = '100%';
+    
+    // Replace any existing unused buffer
+    if (renderingRef.current.buffer) {
+      const oldBuffer = renderingRef.current.buffer;
+      if (oldBuffer.parentNode) {
+        oldBuffer.parentNode.removeChild(oldBuffer);
       }
-      
-      setPagesRendered(prev => {
-        if (!prev.includes(pageNum)) {
-          return [...prev, pageNum].sort((a, b) => a - b);
+    }
+    
+    renderingRef.current.buffer = bufferDiv;
+    return bufferDiv;
+  }, []);
+
+  /**
+   * Swap the active buffer with the newly rendered one
+   */
+  const swapBuffers = useCallback(() => {
+    if (!containerRef.current || !renderingRef.current.buffer) return;
+    
+    // Add the new buffer to the container
+    containerRef.current.appendChild(renderingRef.current.buffer);
+    
+    // Remove the old buffer after a tiny delay to prevent flicker
+    if (renderingRef.current.activeBuffer) {
+      const oldBuffer = renderingRef.current.activeBuffer;
+
+      // remove old content
+      if (oldBuffer.parentNode) {
+        oldBuffer.parentNode.removeChild(oldBuffer);
+      }
+
+      // Use timeout to doubly-ensure the new content is painted before removing old
+      // A value of 0 typically works because it executes after the paint cycle
+      setTimeout(() => {
+        if (oldBuffer.parentNode) {
+          oldBuffer.parentNode.removeChild(oldBuffer);
         }
-        return prev;
-      });
+      }, 0);
+    }
+    
+    // Update tracking references
+    renderingRef.current.activeBuffer = renderingRef.current.buffer;
+    renderingRef.current.buffer = null;
+    renderingRef.current.inProgress = false;
+  }, []);
+
+  /**
+   * Render a specific page and add it to the container
+   */
+  const renderPage = useCallback(async (pageNum: number): Promise<void> => {
+    if (!pdfDoc || renderingRef.current.inProgress) return;
+    
+    setIsRendering(true);
+    renderingRef.current.inProgress = true;
+    
+    try {
+      const buffer = prepareBuffer();
+
+      const canvas = await renderPageToCanvas(pageNum, pdfDoc);
+      
+      if (canvas) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'page-container mb-3';
+        wrapper.appendChild(canvas);
+
+        buffer.appendChild(wrapper);
+        
+        // Swap buffers to display the new content
+        swapBuffers();
+        
+        setPagesRendered([pageNum]);
+      }
     } catch (error) {
       console.error(`Error rendering page ${pageNum}:`, error);
     } finally {
-      setRenderingPage(null);
+      renderingRef.current.inProgress = false;
       setIsRendering(false);
     }
-  }, [pdfDoc, renderingPage, canvasWidth]);
+  }, [pdfDoc, renderPageToCanvas, prepareBuffer, swapBuffers]);
 
   /**
-   * Render all pages in the PDF
+   * Render all pages using double-buffering to prevent any flicker
    */
   const renderAllPages = useCallback(async (): Promise<void> => {
-    if (!pdfDoc) return;
+    if (!pdfDoc || renderingRef.current.inProgress) return;
     
     setIsRendering(true);
+    renderingRef.current.inProgress = true;
     
-    // Need to clear container first
-    if (containerRef.current) {
-      while (containerRef.current.firstChild) {
-        containerRef.current.removeChild(containerRef.current.firstChild);
+    try {
+      const buffer = prepareBuffer();
+      
+      // Create a document fragment for better performance
+      const fragment = document.createDocumentFragment();
+      
+      // Prepare array to track successfully rendered pages
+      const renderedPageNumbers: number[] = [];
+      
+      // Render all pages in parallel
+      const renderPromises = Array.from(
+        { length: pdfDoc.numPages }, 
+        (_, i) => i + 1
+      ).map(async (pageNum) => {
+        const canvas = await renderPageToCanvas(pageNum, pdfDoc);
+        
+        if (canvas) {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'page-container mb-3';
+          wrapper.appendChild(canvas);
+          
+          fragment.appendChild(wrapper);
+          
+          renderedPageNumbers.push(pageNum);
+        }
+      });
+      
+      // Wait for all rendering to complete
+      await Promise.all(renderPromises);
+      
+      buffer.appendChild(fragment);
+      
+      // Only swap if we have content (avoids showing blank screen)
+      if (renderedPageNumbers.length > 0) {
+        // Swap buffers to display the new content without flicker
+        swapBuffers();
+        setPagesRendered(renderedPageNumbers.sort((a, b) => a - b));
       }
+    } catch (error) {
+      console.error('Error rendering all pages:', error);
+    } finally {
+      renderingRef.current.inProgress = false;
+      setIsRendering(false);
     }
-    
-    // Render each page sequentially
-    for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
-      await renderPage(pageNum);
-    }
-    
-    setIsRendering(false);
-  }, [pdfDoc, renderPage]);
+  }, [pdfDoc, renderPageToCanvas, prepareBuffer, swapBuffers]);
 
   /**
    * Clear all rendered pages
    */
   const clearRenderedPages = useCallback((): void => {
-    // Need to clear the container
-    if (containerRef.current) {
-      while (containerRef.current.firstChild) {
-        containerRef.current.removeChild(containerRef.current.firstChild);
-      }
+    // Clean up buffers
+    if (renderingRef.current.buffer && renderingRef.current.buffer.parentNode) {
+      renderingRef.current.buffer.parentNode.removeChild(renderingRef.current.buffer);
     }
     
-    // Now clear the page canvases
-    pageCanvasesRef.current.clear();
+    if (renderingRef.current.activeBuffer && renderingRef.current.activeBuffer.parentNode) {
+      renderingRef.current.activeBuffer.parentNode.removeChild(renderingRef.current.activeBuffer);
+    }
+    
+    renderingRef.current.buffer = null;
+    renderingRef.current.activeBuffer = null;
+    
     setPagesRendered([]);
   }, []);
 
-  // Effect to handle changes in PDF document or canvas width
+  // Effect to initialize when PDF changes
   useEffect(() => {
-    if (pdfDoc) {
-      // When PDF changes, clear and re-render
-      clearRenderedPages();
+    // Initialize with container if we have both container and PDF
+    if (containerRef.current && pdfDoc) {
+      // Just render the new pages without clearing first
       renderAllPages();
     }
     
+    // Only clean up on unmount, not on PDF changes
     return () => {
-      // Clean up on unmount
-      clearRenderedPages();
+      // Only clear on component unmount
+      if (!containerRef.current) {
+        clearRenderedPages();
+      }
     };
-  }, [pdfDoc, canvasWidth]);
+  }, [pdfDoc]);
+
+  // Separate effect for canvas width changes
+  useEffect(() => {
+    if (pdfDoc && containerRef.current && pagesRendered.length > 0) {
+      renderAllPages();
+    }
+  }, [canvasWidth]);
 
   return {
     pagesRendered,
