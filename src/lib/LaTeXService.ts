@@ -1,4 +1,4 @@
-import { Experience, Education, Skill, FormData, Section, GenericSection, Project } from "../types";
+import { Experience, Education, Skill, FormData, Section, GenericSection, Project, Reference } from "../types";
 
 /**
  * Resume LaTeX Generator
@@ -245,6 +245,34 @@ ${this.utils.formatItemize(highlights, { vspaceBefore: '-9pt', vspaceAfter: '-3p
     }).join('\n\n');
   }
 
+  formatReferences(references?: Reference[]): string {
+    if (!references || !references.length) {
+      return '';
+    }
+
+    const sectionHeading = `% references section
+    \\section*{References}
+    `;
+
+    return sectionHeading + references.map((ref, index) => {
+      const name = ref.name || '';
+      const title = ref.title || '';
+      const company = ref.company || '';
+      const contactPhone = ref.contactPhone || '';
+      const contactEmail = ref.contactEmail || '';
+
+      const isLastItem = index === references.length - 1;
+
+      const companyAndTitle = `${company ? company : ''}${company && title ? ' (' : ''}${title ? this.utils.escapeLaTeX(title) : ''}${company && title ? ')' : ''}`;
+      const contactLine = `${contactPhone ? this.utils.escapeLaTeX(contactPhone) : ''}${contactPhone && contactEmail ? ', ' : ''}${contactEmail ? this.utils.escapeLaTeX(contactEmail) : ''}`;
+
+      return `% references details
+    \\textbf{${name}${companyAndTitle ? ',' : ''}} ${this.utils.escapeLaTeX(companyAndTitle)} \\\\
+    ${contactLine}
+    \\vspace{${isLastItem ? '-9pt' : '-3pt'}}`;
+    }).join('\n\n');
+  }
+
   formatGenericSection(section: GenericSection): string {
     if (!section || !section.items.length) {
       return '';
@@ -344,7 +372,8 @@ class LaTeXResumeGenerator {
       experience: this.formatters.formatExperience.bind(this.formatters),
       education: this.formatters.formatEducation.bind(this.formatters),
       skills: this.formatters.formatSkills.bind(this.formatters),
-      projects: this.formatters.formatProjects.bind(this.formatters)
+      projects: this.formatters.formatProjects.bind(this.formatters),
+      references: this.formatters.formatReferences.bind(this.formatters),
     };
 
     this.templateRegistry.register('standard', defaultTemplate);

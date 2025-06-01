@@ -16,6 +16,7 @@ import Projects from './forms/Projects';
 import GenericSection from './forms/GenericSection';
 import { downloadResumeAsJson } from '@/lib/ImportExportService';
 import { useResume } from '@/lib/ResumeContext';
+import Reference from './forms/Reference';
 
 interface SectionRenderItem {
   id: string;
@@ -84,6 +85,16 @@ function Editor() {
         <>
           <Card>
             <Projects />
+          </Card>
+        </>
+    },
+    {
+      id: 'references',
+      title: 'References',
+      renderFunc: () =>
+        <>
+          <Card>
+            <Reference />
           </Card>
         </>
     },

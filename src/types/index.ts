@@ -55,6 +55,14 @@ export interface Project {
   url: string;
 }
 
+export interface Reference {
+  name: string;
+  title: string;
+  company: string;
+  contactEmail: string;
+  contactPhone: string;
+}
+
 export interface GenericSection {
   title: string;
   items: {
@@ -72,6 +80,7 @@ export interface FormData {
   education: Education[];
   skills: Skill[];
   projects: Project[];
+  references: Reference[];
   genericSections?: { [key: string]: GenericSection };
 }
 

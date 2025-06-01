@@ -161,6 +161,34 @@ ${this.utils.formatItemize(highlights, { vspaceBefore: '-9pt', vspaceAfter: '-3p
     }).join('\n\n');
   }
 
+  protected formatReferences(): string {
+    const references = this.formData.references;
+    if (!references || !references.length) {
+      return '';
+    }
+
+    const sectionHeading = `% references section
+\\section*{References}
+`;
+
+    return sectionHeading + references.map((ref, index) => {
+      const name = ref.name || '';
+      const title = ref.title || '';
+      const company = ref.company || '';
+      const contactPhone = ref.contactPhone || '';
+      const contactEmail = ref.contactEmail || '';
+
+      const companyAndTitle = `${company ? company : ''}${company && title ? ' (' : ''}${title ? this.utils.escapeLaTeX(title) : ''}${company && title ? ')' : ''}`;
+      const mainLine = `\\textbf{${this.utils.escapeLaTeX(name)}${companyAndTitle ? ',' : ''}} ${this.utils.escapeLaTeX(companyAndTitle)} \\\\`;
+      const contactLine = `${contactPhone ? `${this.utils.escapeLaTeX(contactPhone)}` : ''}${contactPhone && contactEmail ? ', ' : ''}${contactEmail ? `${this.utils.escapeLaTeX(contactEmail)}` : ''}`;
+      const isLastItem = index === references.length - 1;
+
+      return `${mainLine}
+${contactLine}
+\\vspace{${isLastItem ? '-9pt' : '-3pt'}}`;
+    }).join('\n\n');
+  }
+
   protected formatGenericSection(section: GenericSection): string {
     if (!section || !section.items.length) {
       return '';

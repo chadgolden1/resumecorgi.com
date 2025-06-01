@@ -299,6 +299,7 @@ export const importFromJsonResume = (jsonResume: JsonResume): FormData => {
       highlights: createUnorderedList(project.highlights || []),
       url: project.url || ''
     })),
+    references: [],
   };
 
   // Find custom sections (any key not in standard sections)

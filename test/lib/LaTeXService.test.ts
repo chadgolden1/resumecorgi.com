@@ -49,6 +49,7 @@ describe('LaTeXResumeGenerator', () => {
       }
     ],
     projects: [],
+    references: []
   };
 
   const mockSections: Section[] = [
@@ -402,6 +403,39 @@ describe('LaTeXResumeGenerator', () => {
       expect(result).toContain('\\item Test bullet 2');
     });
 
+    test('should format references section', () => {
+      const formData = {
+        ...mockFormData,
+        references: [
+          {
+            name: 'Jane Smith',
+            title: 'Manager',
+            company: 'Tech Corp',
+            contactEmail: 'jsmith@techcorp.com',
+            contactPhone: '555-123-4567'
+          }
+        ]
+      };
+
+      const result = latexGenerator.generateLaTeX(formData, [
+        {
+          id: 'references',
+          selected: true,
+          sortOrder: 0,
+          displayName: 'References',
+          href: '#references',
+          originalOrder: 0,
+          required: false,
+          sortable: false
+        }
+      ]);
+
+      expect(result).toContain('\\section*{References}');
+      expect(result).toContain('\\textbf{Jane Smith,} Tech Corp (Manager) \\\\');
+      expect(result).toContain('555-123-4567, jsmith@techcorp.com');
+
+    });
+
     test('should format generic section', () => {
       const mockFormData: FormData = {
         personalInfo: {
@@ -435,6 +469,7 @@ describe('LaTeXResumeGenerator', () => {
           }
         ],
         projects: [],
+        references: [],
         genericSections: {
           "genericSection0": {
             title: 'Custom Section',

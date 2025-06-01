@@ -54,6 +54,8 @@ ${footer}`;
         return this.formatSkills();
       case 'projects':
         return this.formatProjects();
+      case 'references':
+        return this.formatReferences();
       default:
         // Check if it's a generic section
         if (this.formData.genericSections && this.formData.genericSections[sectionId]) {
@@ -72,5 +74,6 @@ ${footer}`;
   protected abstract formatEducation(): string;
   protected abstract formatSkills(): string;
   protected abstract formatProjects(): string;
+  protected abstract formatReferences(): string;
   protected abstract formatGenericSection(section: GenericSection): string;
 }

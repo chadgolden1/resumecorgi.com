@@ -405,6 +405,37 @@ ${highlights
     return `${sectionHeading}${projectEntries}`;
   }
 
+  protected formatReferences(): string {
+    const references = this.formData.references;
+    if (!references || !references.length) {
+      return '';
+    }
+
+    const sectionHeading = `\\section{References}`;
+
+    const referenceEntries = references.map((ref, index) => {
+      const name = ref.name || '';
+      const title = ref.title || '';
+      const company = ref.company || '';
+      const contactPhone = ref.contactPhone || '';
+      const contactEmail = ref.contactEmail || '';
+
+      const isLastItem = index === references.length - 1;
+      const spacingAfter = isLastItem ? '' : '\n\n        \\vspace{0.2 cm}\n';
+
+      const companyAndTitle = `${company ? company : ''}${company && title ? ' (' : ''}${title ? this.utils.escapeLaTeX(title) : ''}${company && title ? ')' : ''}`;
+      const contactLine = `${contactPhone ? this.utils.escapeLaTeX(contactPhone) : ''}${contactPhone && contactEmail ? ', ' : ''}${contactEmail ? this.utils.escapeLaTeX(contactEmail) : ''}`;
+
+      return `
+        \\begin{onecolentry}
+            \\textbf{${this.utils.escapeLaTeX(name)}}${companyAndTitle ? ',' : ''} ${this.utils.escapeLaTeX(companyAndTitle)} \\\\
+            ${this.utils.escapeLaTeX(contactLine)}
+        \\end{onecolentry}${spacingAfter}`;
+    }).join('');
+
+    return `${sectionHeading}${referenceEntries}`;
+  }
+
   protected formatGenericSection(section: GenericSection): string {
     if (!section || !section.items.length) {
       return '';

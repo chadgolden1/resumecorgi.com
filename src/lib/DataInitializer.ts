@@ -7,6 +7,7 @@ export const initialSections: Section[] = [
   { id: 'education', displayName: 'Education', href: '#education', selected: true, originalOrder: 2, sortOrder: 2, required: false, sortable: true },
   { id: 'skills', displayName: 'Skills', href: '#skills', selected: true, originalOrder: 3, sortOrder: 3, required: false, sortable: true },
   { id: 'projects', displayName: 'Projects', href: '#projects', selected: true, originalOrder: 4, sortOrder: 4, required: false, sortable: true },
+  { id: "references", displayName: 'References', href: '#references', selected: true, originalOrder: 5, sortOrder: 5, required: false, sortable: true },
 ];
 
 export const createSectionsFromFormData = (formData: FormData): Section[] => {
@@ -49,6 +50,7 @@ export const initialFormData: FormData = {
   education: [],
   skills: [],
   projects: [],
+  references: [],
   genericSections: {}
 };
 
@@ -133,4 +135,13 @@ export const sampleFormData: FormData = {
       "url": "https://www.royalcorgitrainingacademy.com"
     }
   ],
+  "references": [
+    {
+      "name": "Her Majesty the Queen",
+      "company": "Buckingham Palace",
+      "title": "Royal Patron",
+      "contactPhone": "555-123-4567",
+      "contactEmail": "email@example.org"
+    }
+  ]
 };
