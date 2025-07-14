@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarTrigger } from "@/components/ui/sidebar"
 import SortableNav from "./SortableNav";
 import { DownloadCloud, EraserIcon, ExternalLink, FileJson, FlaskConical, ListPlus, UploadCloud } from "lucide-react";
@@ -8,6 +8,8 @@ import { ResumeImporter } from "./ResumeImporter";
 import { FormData } from "@/types";
 import { TemplateSwitcher } from "./TemplateSwitcher";
 import { useResume } from '@/lib/ResumeContext';
+import AiButton from "./AiButton";
+import AITailorModal from "./ai/AITailorModal";
 
 interface SidebarProps {
   resetData?: () => void;
@@ -35,6 +37,7 @@ function AppSidebar({
   onImportJsonFormData,
 }: SidebarProps) {
   const { addGenericSection } = useResume();
+  const [aiModalOpen, setAiModalOpen] = useState(false);
 
   return (
     <Sidebar
@@ -89,6 +92,19 @@ function AppSidebar({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
             </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-gray-700 dark:text-zinc-300">AI Assistant</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <div className="px-2 py-2">
+              <AiButton 
+                onClick={() => setAiModalOpen(true)}
+                className="w-full"
+              >
+                Tailor with AI
+              </AiButton>
+            </div>
           </SidebarGroupContent>
         </SidebarGroup>
         <SidebarGroup>
@@ -169,6 +185,11 @@ function AppSidebar({
           Copyright &copy; 2025 Chad Golden
         </div>
       </SidebarFooter>
+      
+      <AITailorModal 
+        open={aiModalOpen} 
+        onOpenChange={setAiModalOpen} 
+      />
     </Sidebar>
   )
 }
