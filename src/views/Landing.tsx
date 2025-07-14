@@ -1,6 +1,7 @@
 import Button from '../components/Button';
 import Corgi from '../components/Corgi';
 import Footer from '../components/Footer';
+import AiButton from '../components/AiButton';
 
 interface LandingProps {
   onStart: () => void;
@@ -24,14 +25,7 @@ function Landing({ onStart }: LandingProps) {
                 and secure. Your data never leaves your device.
               </p>
               <Button onClick={onStart} text="Start Building" className="px-5 py-2" />
-              <div className="ml-2.5 relative inline-block p-[3px] rounded-3xl ai-gradient-border">
-                <button className="px-4.5 py-2 bg-gray-900 rounded-[22px] text-gray-200 
-                              text-s font-medium cursor-pointer transition-all duration-200 
-                              flex items-center gap-2 hover:bg-gray-800">
-                  <span>✨</span>
-                  Build with AI Mode
-                </button>
-              </div>
+              <AiButton className="ml-2.5" />
             </div>
           </div>
           
