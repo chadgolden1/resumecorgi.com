@@ -57,7 +57,9 @@ const AITailorModal: React.FC<AITailorModalProps> = ({ open, onOpenChange }) => 
         targetSections: ['experience', 'skills', 'projects']
       });
 
-      console.log(results);
+      console.log('AI Tailoring Results:', results);
+      console.log('Tailored Resume:', results.tailoredResume);
+      console.log('Experience in tailored resume:', results.tailoredResume?.experience);
 
       setTailorResults(results);
       setCurrentStep('results');
@@ -122,6 +124,10 @@ const AITailorModal: React.FC<AITailorModalProps> = ({ open, onOpenChange }) => 
 
   const handleApplyAll = () => {
     if (!tailorResults?.success || !tailorResults.tailoredResume) return;
+    
+    console.log('Applying all changes with tailored resume:', tailorResults.tailoredResume);
+    console.log('Experience before apply:', formData.experience);
+    console.log('Experience in tailored resume:', tailorResults.tailoredResume.experience);
     
     // Use the complete tailored resume from the AI response
     setFormData(tailorResults.tailoredResume);

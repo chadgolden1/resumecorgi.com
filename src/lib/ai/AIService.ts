@@ -2,6 +2,7 @@ import { FormData } from '../../types';
 import { TailorRequest, TailorResponse, ChangeRecord, JobInfo, AIProcessingStatus } from '../../types/ai';
 import { AnthropicClient } from './AnthropicClient';
 import { SecureStorage } from './SecureStorage';
+import { resumeToAIFormat, aiFormatToResume } from './FormatConverters';
 
 export class AIService {
   private static statusCallback?: (status: AIProcessingStatus) => void;
@@ -71,8 +72,12 @@ export class AIService {
 
       // Step 2: Tailor the resume
       this.updateStatus('tailoring', 'Optimizing your resume...', 50);
+      
+      // Convert resume to AI-friendly format (HTML to arrays)
+      const aiFormattedResume = resumeToAIFormat(request.resumeData);
+      
       const tailoredResponse = await AnthropicClient.tailorResume(
-        request.resumeData,
+        aiFormattedResume,
         jobInfo,
         request.targetSections || ['experience', 'skills', 'projects']
       );
@@ -83,7 +88,10 @@ export class AIService {
       this.updateStatus('complete', 'Resume optimization complete!', 100);
 
       // Extract the tailored resume and changes from the response
-      const tailoredResume: FormData = result.resume || request.resumeData;
+      // Convert back from AI format (arrays) to resume format (HTML)
+      const tailoredResume: FormData = result.resume 
+        ? aiFormatToResume(result.resume)
+        : request.resumeData;
       const changes: ChangeRecord[] = result.changes || [];
       
       // If no changes were provided but we have a different resume, generate them
