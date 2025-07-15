@@ -118,11 +118,28 @@ export class AnthropicClient {
     const messages: AnthropicMessage[] = [
       {
         role: 'user',
-        content: `Please tailor this resume to better match the job requirements. Focus on:
-        1. Rewording experience descriptions to highlight relevant skills and achievements
-        2. Reordering or emphasizing relevant skills
-        3. Using keywords from the job posting naturally
-        4. Maintaining truthfulness - only rephrase existing experiences
+        content: `Please aggressively tailor this resume to maximize match with the job requirements. You should:
+
+        1. REWRITE every experience bullet point to:
+           - Start with strong action verbs
+           - Include relevant keywords from the job posting
+           - Quantify achievements where possible
+           - Emphasize skills/technologies mentioned in the job
+           - Focus on outcomes and impact
+        
+        2. For skills section:
+           - Reorder to put most relevant skills first
+           - Add any missing skills that are implied by the experience
+           - Group related skills effectively
+           - Remove or de-emphasize irrelevant skills
+        
+        3. For projects (if present):
+           - Highlight technologies that match job requirements
+           - Emphasize relevant outcomes
+           - Use industry-specific terminology from the job posting
+        
+        4. Make SUBSTANTIAL changes for items that need improvement - those sections should be noticeably improved
+        5. Maintain truthfulness but be creative with phrasing
 
         Current Resume (JSON):
         ${JSON.stringify(resumeData, null, 2)}

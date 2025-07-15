@@ -82,9 +82,17 @@ export class AIService {
       // Step 3: Process the response
       this.updateStatus('complete', 'Resume optimization complete!', 100);
 
-      // Extract changes from the response
-      const changes: ChangeRecord[] = result.changes || [];
+      // Extract the tailored resume and changes from the response
       const tailoredResume: FormData = result.resume || request.resumeData;
+      const changes: ChangeRecord[] = result.changes || [];
+      
+      // If no changes were provided but we have a different resume, generate them
+      if (changes.length === 0 && result.resume) {
+        const generatedChanges = this.compareResumes(request.resumeData, tailoredResume);
+        if (generatedChanges.length > 0) {
+          changes.push(...generatedChanges);
+        }
+      }
 
       // Generate suggestions based on the analysis
       const suggestions = this.generateSuggestions(jobInfo, request.resumeData, tailoredResume);

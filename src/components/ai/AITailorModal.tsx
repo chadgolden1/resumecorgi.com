@@ -121,10 +121,11 @@ const AITailorModal: React.FC<AITailorModalProps> = ({ open, onOpenChange }) => 
   };
 
   const handleApplyAll = () => {
-    if (!tailorResults?.success) return;
+    if (!tailorResults?.success || !tailorResults.tailoredResume) return;
     
-    const allChangeIds = tailorResults.changes.map((_, index) => index.toString());
-    handleApplyChanges(allChangeIds);
+    // Use the complete tailored resume from the AI response
+    setFormData(tailorResults.tailoredResume);
+    onOpenChange(false);
   };
 
   const handleStartOver = () => {
