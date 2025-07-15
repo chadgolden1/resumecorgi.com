@@ -80,23 +80,25 @@ export class AnthropicClient {
     const messages: AnthropicMessage[] = [
       {
         role: 'user',
-        content: `Please analyze this job posting and extract the following information in JSON format, see the destination TypeScript type representation below:
-        export interface JobInfo {
-          title: string;
-          company: string;
-          location?: string;
-          requirements: string[];
-          responsibilities: string[];
-          skills: string[];
-          description: string;
+        content: `Please analyze this job posting and extract the following information. Return a JSON object with this exact structure:
+        {
+          "title": "Job Title",
+          "company": "Company Name",
+          "location": "Location (optional)",
+          "requirements": ["requirement 1", "requirement 2", ...],
+          "responsibilities": ["responsibility 1", "responsibility 2", ...],
+          "skills": ["skill 1", "skill 2", ...],
+          "description": "Brief description of the role"
         }
-
-        Any specific keywords or phrases that should be incorporated
 
         Job Posting:
         ${jobDescription}
 
-        Return ONLY valid JSON without any markdown formatting. Respond with nothing else other than valid JSON.`
+        Important:
+        - Extract ALL relevant requirements, responsibilities, and skills
+        - Keep array items concise but informative
+        - Return ONLY valid JSON without any markdown formatting
+        - Use exactly these field names`
       }
     ];
 
@@ -130,7 +132,26 @@ export class AnthropicClient {
 
         Target Sections to Optimize: ${targetSections.join(', ')}
 
-        Return the optimized resume in the same JSON format with a "changes" array documenting what was modified and why. The response should be valid JSON only, no markdown.`
+        Return a JSON response with the following structure:
+        {
+          "resume": <the complete tailored resume in the same format as the input>,
+          "changes": [
+            {
+              "section": <section name like "experience", "skills", "projects">,
+              "field": <field name like "accomplishments", "skillList", "description">,
+              "itemIndex": <optional: array index if modifying an array item>,
+              "before": <original text>,
+              "after": <modified text>,
+              "reason": <explanation of why this change improves match with job>
+            }
+          ]
+        }
+        
+        Important:
+        - Include the COMPLETE tailored resume object in the "resume" field
+        - Document EVERY change made in the "changes" array
+        - The response must be valid JSON only, no markdown formatting
+        - Maintain the exact structure and field names as shown above`
       }
     ];
 
@@ -148,19 +169,23 @@ export class AnthropicClient {
         role: 'user',
         content: `Please fetch the job posting from this URL and analyze it: ${url}
 
-        Extract the following information in JSON format:
-        - Job title
-        - Company name
-        - Location
-        - Key requirements (as an array)
-        - Main responsibilities (as an array)
-        - Required skills (as an array)
-        - Preferred skills (as an array)
-        - Important keywords or phrases
+        Extract and return a JSON object with this exact structure:
+        {
+          "title": "Job Title",
+          "company": "Company Name",
+          "location": "Location (optional)",
+          "requirements": ["requirement 1", "requirement 2", ...],
+          "responsibilities": ["responsibility 1", "responsibility 2", ...],
+          "skills": ["skill 1", "skill 2", ...],
+          "description": "Brief description of the role"
+        }
 
         If you cannot access the URL, please let me know and I'll provide the job description directly.
         
-        Return only valid JSON without any markdown formatting.`
+        Important:
+        - Return ONLY valid JSON without any markdown formatting
+        - Use exactly these field names
+        - Combine required and preferred skills into the "skills" array`
       }
     ];
 
