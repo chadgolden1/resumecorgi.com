@@ -7,6 +7,7 @@ import { TailorResponse, AIProcessingStatus } from '../../types/ai';
 import APIKeyManager from './APIKeyManager';
 import JobURLInput from './JobURLInput';
 import ResumeDiffViewer from './ResumeDiffViewer';
+import AiSpinner from '../AiSpinner';
 
 interface AITailorModalProps {
   open: boolean;
@@ -49,12 +50,14 @@ const AITailorModal: React.FC<AITailorModalProps> = ({ open, onOpenChange }) => 
     setCurrentStep('processing');
     
     try {
-      const results = await AIService.tailorResume({
+      const results: TailorResponse = await AIService.tailorResume({
         jobUrl: jobData.url,
         jobDescription: jobData.description,
         resumeData: formData,
         targetSections: ['experience', 'skills', 'projects']
       });
+
+      console.log(results);
 
       setTailorResults(results);
       setCurrentStep('results');
@@ -89,9 +92,18 @@ const AITailorModal: React.FC<AITailorModalProps> = ({ open, onOpenChange }) => 
           updatedFormData.experience = newExperience;
         }
       } else if (change.section === 'skills') {
-        // For skills, we need to parse the comma-separated string back to skill objects
-        const skillNames = change.after.split(', ');
-        updatedFormData.skills = skillNames.map(name => ({ name: name.trim() }));
+        // For skills, we need to handle the skill format properly
+        // Assuming change.after contains the skill list for a category
+        if (change.itemIndex !== undefined && updatedFormData.skills) {
+          const newSkills = [...updatedFormData.skills];
+          if (newSkills[change.itemIndex]) {
+            newSkills[change.itemIndex] = {
+              ...newSkills[change.itemIndex],
+              skillList: change.after
+            };
+            updatedFormData.skills = newSkills;
+          }
+        }
       } else if (change.section === 'projects' && change.itemIndex !== undefined) {
         const newProjects = [...(updatedFormData.projects || [])];
         if (newProjects[change.itemIndex]) {
@@ -139,7 +151,7 @@ const AITailorModal: React.FC<AITailorModalProps> = ({ open, onOpenChange }) => 
       case 'processing':
         return (
           <div className="text-center py-8 space-y-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mx-auto"></div>
+            <AiSpinner className="text-center mx-auto" />
             <div className="space-y-2">
               <p className="font-medium text-gray-900">{processingStatus.message}</p>
               {processingStatus.progress !== undefined && (
@@ -229,7 +241,7 @@ const AITailorModal: React.FC<AITailorModalProps> = ({ open, onOpenChange }) => 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-white dark:bg-gray-900">
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-white dark:bg-zinc-900">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2 text-gray-900 dark:text-gray-100">
             <span>✨</span>

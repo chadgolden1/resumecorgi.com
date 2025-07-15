@@ -81,7 +81,7 @@ const APIKeyManager: React.FC<APIKeyManagerProps> = ({ onKeyConfigured }) => {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
           Anthropic API Key
         </label>
         <div className="relative">
@@ -106,7 +106,7 @@ const APIKeyManager: React.FC<APIKeyManagerProps> = ({ onKeyConfigured }) => {
             {showKey ? '🙈' : '👁️'}
           </button>
         </div>
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-gray-500 dark:text-gray-400">
           Your API key is encrypted and stored locally. It never leaves your browser.
         </p>
       </div>
@@ -124,7 +124,7 @@ const APIKeyManager: React.FC<APIKeyManagerProps> = ({ onKeyConfigured }) => {
         className="w-full"
       />
 
-      <div className="text-xs text-gray-500 space-y-1">
+      <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
         <p>• Get your API key from <a href="https://console.anthropic.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">console.anthropic.com</a></p>
         <p>• Keys are encrypted using AES-256-GCM</p>
         <p>• All AI processing happens in your browser</p>

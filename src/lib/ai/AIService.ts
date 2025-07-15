@@ -27,6 +27,10 @@ export class AIService {
    */
   static async tailorResume(request: TailorRequest): Promise<TailorResponse> {
     try {
+
+      // const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+      // await delay(10000000);
       // Check for API key
       if (!SecureStorage.hasAPIKey()) {
         throw new Error('Please configure your API key before using AI features');
@@ -39,10 +43,28 @@ export class AIService {
         this.updateStatus('fetching-job', 'Fetching job posting...', 10);
         const jobAnalysis = await AnthropicClient.fetchAndAnalyzeJob(request.jobUrl);
         jobInfo = JSON.parse(jobAnalysis);
+        // jobInfo = {
+        //   title: parsedInfo.jobTitle || parsedInfo['Job title'] || '',
+        //   company: parsedInfo.company || parsedInfo['Company name'] || '',
+        //   location: parsedInfo.location || '',
+        //   requirements: parsedInfo.requirements || parsedInfo['Key requirements'] || [],
+        //   responsibilities: parsedInfo.responsibilities || parsedInfo['Main responsibilities'] || [],
+        //   skills: parsedInfo.skills || parsedInfo['Required skills'] || [],
+        //   description: parsedInfo.description || ''
+        // };
       } else if (request.jobDescription) {
         this.updateStatus('analyzing', 'Analyzing job description...', 10);
         const jobAnalysis = await AnthropicClient.analyzeJobPosting(request.jobDescription);
         jobInfo = JSON.parse(jobAnalysis);
+        // jobInfo = {
+        //   title: parsedInfo.title || parsedInfo['Job title'] || '',
+        //   company: parsedInfo.company || parsedInfo['Company name'] || '',
+        //   location: parsedInfo.location || '',
+        //   requirements: parsedInfo.requirements || parsedInfo['Key requirements'] || [],
+        //   responsibilities: parsedInfo.responsibilities || parsedInfo['Main responsibilities'] || [],
+        //   skills: parsedInfo.skills || parsedInfo['Required skills'] || [],
+        //   description: parsedInfo.description || ''
+        // };
       } else {
         throw new Error('Please provide either a job URL or job description');
       }
@@ -93,8 +115,10 @@ export class AIService {
     const suggestions: string[] = [];
 
     // Check for missing skills
-    const currentSkills = originalResume.skills?.map(s => s.name.toLowerCase()) || [];
-    const missingSkills = jobInfo.skills.filter(skill => 
+    const currentSkills = originalResume.skills?.flatMap(s => 
+      s.skillList.split(',').map(skill => skill.trim().toLowerCase())
+    ) || [];
+    const missingSkills = (jobInfo.skills || []).filter(skill => 
       !currentSkills.some(cs => cs.includes(skill.toLowerCase()))
     );
 
@@ -103,7 +127,7 @@ export class AIService {
     }
 
     // Check keyword density
-    const jobKeywords = [...jobInfo.requirements, ...jobInfo.responsibilities]
+    const jobKeywords = [...(jobInfo.requirements || []), ...(jobInfo.responsibilities || [])]
       .join(' ')
       .toLowerCase()
       .split(/\s+/)
@@ -123,7 +147,7 @@ export class AIService {
 
     // Quantifiable achievements
     const hasNumbers = originalResume.experience?.some(exp => 
-      /\d+/.test(exp.description)
+      /\d+/.test(exp.accomplishments)
     );
     if (!hasNumbers) {
       suggestions.push('Add quantifiable achievements (percentages, numbers, metrics) to your experience descriptions');
@@ -163,13 +187,13 @@ export class AIService {
     if (original.experience && tailored.experience) {
       original.experience.forEach((exp, index) => {
         const tailoredExp = tailored.experience[index];
-        if (tailoredExp && exp.description !== tailoredExp.description) {
+        if (tailoredExp && exp.accomplishments !== tailoredExp.accomplishments) {
           changes.push({
             section: 'experience',
-            field: 'description',
+            field: 'accomplishments',
             itemIndex: index,
-            before: exp.description,
-            after: tailoredExp.description,
+            before: exp.accomplishments,
+            after: tailoredExp.accomplishments,
             reason: 'Optimized to better match job requirements'
           });
         }
@@ -178,18 +202,19 @@ export class AIService {
 
     // Compare skills section
     if (original.skills && tailored.skills) {
-      const originalSkillNames = original.skills.map(s => s.name).sort().join(', ');
-      const tailoredSkillNames = tailored.skills.map(s => s.name).sort().join(', ');
-      
-      if (originalSkillNames !== tailoredSkillNames) {
-        changes.push({
-          section: 'skills',
-          field: 'skills',
-          before: originalSkillNames,
-          after: tailoredSkillNames,
-          reason: 'Reordered or updated to highlight relevant skills'
-        });
-      }
+      original.skills.forEach((skill, index) => {
+        const tailoredSkill = tailored.skills[index];
+        if (tailoredSkill && skill.skillList !== tailoredSkill.skillList) {
+          changes.push({
+            section: 'skills',
+            field: 'skillList',
+            itemIndex: index,
+            before: skill.skillList,
+            after: tailoredSkill.skillList,
+            reason: `Updated ${skill.category} skills to highlight relevant ones`
+          });
+        }
+      });
     }
 
     // Compare projects section

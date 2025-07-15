@@ -161,8 +161,8 @@ section[contenteditable="true"] ul li:focus {
 .ai-gradient-border {
   background: conic-gradient(
     from var(--angle, 0deg),
-    #ffffff 0deg,
-    #ffffff 90deg,
+    #ffffff00 0deg,
+    #ffffff00 90deg,
     #4285f4 180deg,
     #00bcd4 200deg,
     #34a853 220deg,
@@ -172,7 +172,7 @@ section[contenteditable="true"] ul li:focus {
     #ea4335 300deg,
     #e91e63 320deg,
     #9333ea 340deg,
-    #ffffff 360deg
+    #ffffff00 360deg
   );
   animation: rotate 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }

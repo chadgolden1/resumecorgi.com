@@ -1,4 +1,3 @@
-import Button from '../components/Button';
 import Corgi from '../components/Corgi';
 import Footer from '../components/Footer';
 import AiButton from '../components/AiButton';
@@ -24,8 +23,7 @@ function Landing({ onStart }: LandingProps) {
                 It's free, optimized for scanning software,
                 and secure. Your data never leaves your device.
               </p>
-              <Button onClick={onStart} text="Start Building" className="px-5 py-2" />
-              <AiButton className="ml-2.5" />
+              <AiButton onClick={onStart} className="ml-2.5" />
             </div>
           </div>
           

@@ -6,6 +6,7 @@ interface ButtonProps {
   className?: string;
   theme?: 'default' | 'primary' | 'interaction' | 'danger' | 'success' | 'warning';
   parentClassName?: string;
+  disabled?: boolean;
 }
 
 function Button({
@@ -13,7 +14,8 @@ function Button({
   text = "",
   className = "",
   theme = "primary",
-  parentClassName = "" 
+  parentClassName = "",
+  disabled = false
 }: ButtonProps) {
   const themeShadowClasses = {
     default:
@@ -29,10 +31,6 @@ function Button({
         bg-black
       `,
     danger:
-      `
-        bg-black
-      `,
-    "danger-outline":
       `
         bg-black
       `,
@@ -120,8 +118,10 @@ function Button({
           rounded-lg
           group-hover/button:cursor-pointer
           group-active/button:shadow-[inset_3px_3px_5px_rgba(0,0,0,0.4)]
+          ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
         `}
-        onClick={onClick}>
+        onClick={onClick}
+        disabled={disabled}>
         {text}
       </button>
     </div>

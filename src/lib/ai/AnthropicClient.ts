@@ -14,19 +14,30 @@ interface AnthropicResponse {
 
 export class AnthropicClient {
   private static readonly API_URL = 'https://api.anthropic.com/v1/messages';
-  private static readonly MODEL = 'claude-3-5-sonnet-20241022';
-  private static readonly MAX_TOKENS = 4096;
+  private static readonly MODEL = 'claude-3-5-sonnet-latest'; // claude-opus-4-20250514, claude-3-7-sonnet-20250219, claude-3-5-sonnet-latest 
+  private static readonly MAX_TOKENS = 4096 * 2;
 
   /**
    * Sends a message to Claude API
    */
   static async sendMessage(
     messages: AnthropicMessage[],
-    systemPrompt?: string
+    systemPrompt?: string,
+    useWebSearch?: boolean
   ): Promise<string> {
     const apiKey = await SecureStorage.getAPIKey('anthropic');
     if (!apiKey) {
       throw new Error('No API key found. Please configure your Anthropic API key.');
+    }
+
+    let tools = [];
+
+    if (useWebSearch) {
+      tools.push({
+        "type": "web_search_20250305",
+        "name": "web_search",
+        "max_uses": 5
+      })
     }
 
     try {
@@ -42,6 +53,7 @@ export class AnthropicClient {
           model: this.MODEL,
           max_tokens: this.MAX_TOKENS,
           messages,
+          tools: tools,
           ...(systemPrompt && { system: systemPrompt })
         })
       });
@@ -68,19 +80,23 @@ export class AnthropicClient {
     const messages: AnthropicMessage[] = [
       {
         role: 'user',
-        content: `Please analyze this job posting and extract the following information in JSON format:
-        - Job title
-        - Company name
-        - Key requirements (as an array)
-        - Main responsibilities (as an array)
-        - Required skills (as an array)
-        - Preferred skills (as an array)
-        - Any specific keywords or phrases that should be incorporated
+        content: `Please analyze this job posting and extract the following information in JSON format, see the destination TypeScript type representation below:
+        export interface JobInfo {
+          title: string;
+          company: string;
+          location?: string;
+          requirements: string[];
+          responsibilities: string[];
+          skills: string[];
+          description: string;
+        }
+
+        Any specific keywords or phrases that should be incorporated
 
         Job Posting:
         ${jobDescription}
 
-        Return only valid JSON without any markdown formatting.`
+        Return ONLY valid JSON without any markdown formatting. Respond with nothing else other than valid JSON.`
       }
     ];
 
