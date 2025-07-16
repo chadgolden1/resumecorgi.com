@@ -1,8 +1,10 @@
 import { FormData } from '../../types';
 import { TailorRequest, TailorResponse, ChangeRecord, JobInfo, AIProcessingStatus } from '../../types/ai';
+import { AIFormData } from '../../types/ai-data';
 import { AnthropicClient } from './AnthropicClient';
 import { SecureStorage } from './SecureStorage';
 import { FormDataDiff } from './FormDataDiff';
+import { FormDataConverter } from './FormDataConverter';
 
 export class AIService {
   private static statusCallback?: (status: AIProcessingStatus) => void;
@@ -70,16 +72,22 @@ export class AIService {
         throw new Error('Please provide either a job URL or job description');
       }
 
-      // Step 2: Tailor the resume
+      // Step 2: Convert to AI format and tailor the resume
       this.updateStatus('tailoring', 'Optimizing your resume...', 50);
       
+      // Convert FormData to AI-friendly format
+      const aiFormData: AIFormData = FormDataConverter.toAIFormat(request.resumeData);
+      
       const tailoredResponse = await AnthropicClient.tailorResume(
-        request.resumeData,
+        aiFormData,
         jobInfo,
         request.targetSections || ['experience', 'skills', 'projects']
       );
 
-      const tailoredResume: FormData = JSON.parse(tailoredResponse);
+      const tailoredAIData: AIFormData = JSON.parse(tailoredResponse);
+      
+      // Convert back to FormData format
+      const tailoredResume: FormData = FormDataConverter.fromAIFormat(tailoredAIData, request.resumeData);
       
       // Step 3: Generate changes by comparing original and tailored resumes
       this.updateStatus('complete', 'Resume optimization complete!', 100);

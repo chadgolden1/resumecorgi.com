@@ -1,5 +1,5 @@
 import { SecureStorage } from './SecureStorage';
-import { FormData } from '../../types';
+import { AIFormData } from '../../types/ai-data';
 
 interface AnthropicMessage {
   role: 'user' | 'assistant';
@@ -110,7 +110,7 @@ export class AnthropicClient {
    * Tailors a resume based on job requirements
    */
   static async tailorResume(
-    resumeData: FormData,
+    resumeData: AIFormData,
     jobAnalysis: any,
     targetSections: string[] = ['experience', 'skills']
   ): Promise<string> {
@@ -127,25 +127,25 @@ export class AnthropicClient {
            - Quantify achievements where possible
            - Emphasize skills/technologies mentioned in the job
            - Focus on outcomes and impact
-           - IMPORTANT: Accomplishments are in HTML list format (<ul><li>...</li></ul>), maintain this format
+           - IMPORTANT: Accomplishments are provided as an array of strings, maintain this format
         
         2. For skills section:
            - Reorder to put most relevant skills first
            - Add any missing skills that are implied by the experience
            - Group related skills effectively
            - Remove or de-emphasize irrelevant skills
-           - Skills are in the "skillList" field as comma-separated values
+           - Skills are provided as an array in the "skills" field
         
         3. For projects (if present):
            - Highlight technologies that match job requirements
            - Emphasize relevant outcomes
            - Use industry-specific terminology from the job posting
-           - Project highlights are in HTML list format
+           - Project highlights are provided as an array of strings
         
-        4. Make SUBSTANTIAL changes for items that need improvement - those sections should be noticeably improved
+        4. Make SUBSTANTIAL changes for items that need improvement
         5. Maintain truthfulness but be creative with phrasing
         6. CRITICAL: Preserve ALL fields from the original resume structure, even if unchanged
-        7. CRITICAL: Maintain HTML list format for accomplishments/highlights fields
+        7. CRITICAL: Maintain array format for accomplishments, skills, and highlights fields
 
         Current Resume (JSON):
         ${JSON.stringify(resumeData, null, 2)}
@@ -155,13 +155,12 @@ export class AnthropicClient {
 
         Target Sections to Optimize: ${targetSections.join(', ')}
 
-        Return a JSON response with ONLY the complete tailored resume in the same FormData format as the input.
+        Return a JSON response with ONLY the complete tailored resume in the same AIFormData format as the input.
         
         Important:
         - Return the COMPLETE resume object with ALL sections and fields
-        - Maintain the exact same structure as the input FormData
-        - Keep HTML list format for accomplishments and highlights: <ul><li>item 1</li><li>item 2</li></ul>
-        - Keep comma-separated format for skillList field
+        - Maintain the exact same structure as the input AIFormData
+        - Keep array format for accomplishments, skills, and highlights
         - Do NOT include a "changes" array - just return the tailored resume
         - The response must be valid JSON only, no markdown formatting`
       }

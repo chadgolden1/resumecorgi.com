@@ -1,6 +1,28 @@
 import React from 'react';
 import { ChangeRecord } from '../../types/ai';
 
+// Helper function to render HTML content or plain text
+const renderContent = (content: string) => {
+  // Check if content contains HTML list tags
+  if (content.includes('<ul>') || content.includes('<li>')) {
+    // Extract list items and render as plain text
+    const items = content.match(/<li[^>]*>(.*?)<\/li>/gi) || [];
+    if (items.length > 0) {
+      return (
+        <ul className="list-disc list-inside space-y-1">
+          {items.map((item, index) => {
+            const text = item.replace(/<\/?li[^>]*>/gi, '').trim();
+            return <li key={index}>{text}</li>;
+          })}
+        </ul>
+      );
+    }
+  }
+  
+  // For comma-separated skills or plain text
+  return <span>{content}</span>;
+};
+
 interface ResumeDiffViewerProps {
   changes: ChangeRecord[];
   suggestions: string[];
@@ -102,7 +124,7 @@ const ResumeDiffViewer: React.FC<ResumeDiffViewerProps> = ({
                   <div className="space-y-1">
                     <p className="text-xs font-medium text-red-700">Before:</p>
                     <div className="bg-red-50 border-l-4 border-red-200 p-2 text-sm text-red-900">
-                      {change.before}
+                      {renderContent(change.before)}
                     </div>
                   </div>
 
@@ -110,7 +132,7 @@ const ResumeDiffViewer: React.FC<ResumeDiffViewerProps> = ({
                   <div className="space-y-1">
                     <p className="text-xs font-medium text-green-700">After:</p>
                     <div className="bg-green-50 border-l-4 border-green-200 p-2 text-sm text-green-900">
-                      {change.after}
+                      {renderContent(change.after)}
                     </div>
                   </div>
 
