@@ -1,4 +1,5 @@
 import { SecureStorage } from './SecureStorage';
+import { FormData } from '../../types';
 
 interface AnthropicMessage {
   role: 'user' | 'assistant';
@@ -109,7 +110,7 @@ export class AnthropicClient {
    * Tailors a resume based on job requirements
    */
   static async tailorResume(
-    resumeData: any,
+    resumeData: FormData,
     jobAnalysis: any,
     targetSections: string[] = ['experience', 'skills']
   ): Promise<string> {
@@ -126,23 +127,25 @@ export class AnthropicClient {
            - Quantify achievements where possible
            - Emphasize skills/technologies mentioned in the job
            - Focus on outcomes and impact
-           - IMPORTANT: Accomplishments will be provided as an array of strings, maintain this format
+           - IMPORTANT: Accomplishments are in HTML list format (<ul><li>...</li></ul>), maintain this format
         
         2. For skills section:
            - Reorder to put most relevant skills first
            - Add any missing skills that are implied by the experience
            - Group related skills effectively
            - Remove or de-emphasize irrelevant skills
+           - Skills are in the "skillList" field as comma-separated values
         
         3. For projects (if present):
            - Highlight technologies that match job requirements
            - Emphasize relevant outcomes
            - Use industry-specific terminology from the job posting
+           - Project highlights are in HTML list format
         
         4. Make SUBSTANTIAL changes for items that need improvement - those sections should be noticeably improved
         5. Maintain truthfulness but be creative with phrasing
         6. CRITICAL: Preserve ALL fields from the original resume structure, even if unchanged
-        7. CRITICAL: Accomplishments and similar fields are arrays of strings - keep them as arrays!
+        7. CRITICAL: Maintain HTML list format for accomplishments/highlights fields
 
         Current Resume (JSON):
         ${JSON.stringify(resumeData, null, 2)}
@@ -152,31 +155,15 @@ export class AnthropicClient {
 
         Target Sections to Optimize: ${targetSections.join(', ')}
 
-        Return a JSON response with the following structure:
-        {
-          "resume": <the complete tailored resume in the same format as the input>,
-          "changes": [
-            {
-              "section": <section name like "experience", "skills", "projects">,
-              "field": <field name like "accomplishments", "skillList", "description">,
-              "itemIndex": <optional: array index if modifying an array item>,
-              "before": <original text>,
-              "after": <modified text>,
-              "reason": <explanation of why this change improves match with job>
-            }
-          ]
-        }
+        Return a JSON response with ONLY the complete tailored resume in the same FormData format as the input.
         
         Important:
-        - Include the COMPLETE tailored resume object in the "resume" field
-        - The resume MUST contain ALL original fields for each section (for experience: title, company, start, end, accomplishments)
-        - Do NOT omit any fields - if you don't change a field, include its original value
-        - CRITICAL: The "accomplishments" field is an ARRAY of strings like ["bullet 1", "bullet 2"] - keep as array!
-        - For education "accomplishments" also maintain array format if present
-        - For projects "highlights" maintain array format if present
-        - Document EVERY change made in the "changes" array
-        - The response must be valid JSON only, no markdown formatting
-        - Maintain the exact structure and field names as shown above`
+        - Return the COMPLETE resume object with ALL sections and fields
+        - Maintain the exact same structure as the input FormData
+        - Keep HTML list format for accomplishments and highlights: <ul><li>item 1</li><li>item 2</li></ul>
+        - Keep comma-separated format for skillList field
+        - Do NOT include a "changes" array - just return the tailored resume
+        - The response must be valid JSON only, no markdown formatting`
       }
     ];
 

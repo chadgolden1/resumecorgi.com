@@ -2,7 +2,7 @@ import { FormData } from '../../types';
 import { TailorRequest, TailorResponse, ChangeRecord, JobInfo, AIProcessingStatus } from '../../types/ai';
 import { AnthropicClient } from './AnthropicClient';
 import { SecureStorage } from './SecureStorage';
-import { resumeToAIFormat, aiFormatToResume } from './FormatConverters';
+import { FormDataDiff } from './FormDataDiff';
 
 export class AIService {
   private static statusCallback?: (status: AIProcessingStatus) => void;
@@ -73,33 +73,22 @@ export class AIService {
       // Step 2: Tailor the resume
       this.updateStatus('tailoring', 'Optimizing your resume...', 50);
       
-      // Convert resume to AI-friendly format (HTML to arrays)
-      const aiFormattedResume = resumeToAIFormat(request.resumeData);
-      
       const tailoredResponse = await AnthropicClient.tailorResume(
-        aiFormattedResume,
+        request.resumeData,
         jobInfo,
         request.targetSections || ['experience', 'skills', 'projects']
       );
 
-      const result = JSON.parse(tailoredResponse);
+      const tailoredResume: FormData = JSON.parse(tailoredResponse);
       
-      // Step 3: Process the response
+      // Step 3: Generate changes by comparing original and tailored resumes
       this.updateStatus('complete', 'Resume optimization complete!', 100);
 
-      // Extract the tailored resume and changes from the response
-      // Convert back from AI format (arrays) to resume format (HTML)
-      const tailoredResume: FormData = result.resume 
-        ? aiFormatToResume(result.resume)
-        : request.resumeData;
-      const changes: ChangeRecord[] = result.changes || [];
+      const changes: ChangeRecord[] = FormDataDiff.generateDiff(request.resumeData, tailoredResume);
       
-      // If no changes were provided but we have a different resume, generate them
-      if (changes.length === 0 && result.resume) {
-        const generatedChanges = this.compareResumes(request.resumeData, tailoredResume);
-        if (generatedChanges.length > 0) {
-          changes.push(...generatedChanges);
-        }
+      // If no changes were detected, ensure we have at least some feedback
+      if (changes.length === 0) {
+        throw new Error('No changes were made to the resume. The content may already be well-optimized.');
       }
 
       // Generate suggestions based on the analysis
@@ -193,63 +182,4 @@ export class AIService {
     }
   }
 
-  /**
-   * Compares two resumes and returns detailed changes
-   */
-  static compareResumes(original: FormData, tailored: FormData): ChangeRecord[] {
-    const changes: ChangeRecord[] = [];
-
-    // Compare experience section
-    if (original.experience && tailored.experience) {
-      original.experience.forEach((exp, index) => {
-        const tailoredExp = tailored.experience[index];
-        if (tailoredExp && exp.accomplishments !== tailoredExp.accomplishments) {
-          changes.push({
-            section: 'experience',
-            field: 'accomplishments',
-            itemIndex: index,
-            before: exp.accomplishments,
-            after: tailoredExp.accomplishments,
-            reason: 'Optimized to better match job requirements'
-          });
-        }
-      });
-    }
-
-    // Compare skills section
-    if (original.skills && tailored.skills) {
-      original.skills.forEach((skill, index) => {
-        const tailoredSkill = tailored.skills[index];
-        if (tailoredSkill && skill.skillList !== tailoredSkill.skillList) {
-          changes.push({
-            section: 'skills',
-            field: 'skillList',
-            itemIndex: index,
-            before: skill.skillList,
-            after: tailoredSkill.skillList,
-            reason: `Updated ${skill.category} skills to highlight relevant ones`
-          });
-        }
-      });
-    }
-
-    // Compare projects section
-    if (original.projects && tailored.projects) {
-      original.projects.forEach((proj, index) => {
-        const tailoredProj = tailored.projects[index];
-        if (tailoredProj && proj.description !== tailoredProj.description) {
-          changes.push({
-            section: 'projects',
-            field: 'description',
-            itemIndex: index,
-            before: proj.description,
-            after: tailoredProj.description,
-            reason: 'Enhanced to emphasize relevant technologies and achievements'
-          });
-        }
-      });
-    }
-
-    return changes;
-  }
 }
