@@ -2,7 +2,7 @@
 // Reduces engine start up time from 30-60 seconds to ~1 second
 
 const CACHE_NAME = 'texlive-cache-v1';
-const TEXLIVE_URL_PATTERN = /texlive.*\.swiftlatex\.com\/pdftex\//;
+const TEXLIVE_URL_PATTERN = /texlive.*\.(?:swiftlatex|resumecorgi)\.com\/pdftex\//;
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();

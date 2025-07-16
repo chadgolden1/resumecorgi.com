@@ -15,7 +15,9 @@ export interface PdfTeXEngine {
   setEngineMainFile(fileName: string): void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   compileLaTeX(): Promise<any>;
+  compileFormat(): Promise<any>;
   loadEngine: () => Promise<void>;
+  setTexliveEndpoint(url: string): void;
 }
 
 export interface PersonalInfo {

@@ -28,6 +28,27 @@ export function extractAndCopySwiftLaTeX(): Plugin {
             console.warn(`File ${file} not found in extracted directory`)
           }
         })
+
+        // HACK: patch bug in PdfTexEngine.js
+        // consider patching this in the SwiftLaTeX repo or forking
+        const pdfTexDestPath = path.resolve('public', 'PdfTeXEngine.js')
+        try {
+          if (fs.existsSync(pdfTexDestPath)) {
+            let content = fs.readFileSync(pdfTexDestPath, 'utf8')
+            
+            content = content.replace(
+              /(this\.latexWorker\.postMessage\(\{ 'cmd': 'settexliveurl', 'url': url \}\);\s+)this\.latexWorker = undefined;(\s+)/,
+              '$1$2'
+            )
+            
+            fs.writeFileSync(pdfTexDestPath, content)
+            console.log(`Patched and copied PdfTeXEngine.js`)
+          } else {
+            console.warn(`PdfTeXEngine.js not found at ${pdfTexDestPath}`)
+          }
+        } catch (error) {
+          console.error('Error patching PdfTeXEngine.js:', error)
+        }
       } catch (error) {
         console.error('Error during extraction or copying:', error)
       }

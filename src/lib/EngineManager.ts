@@ -60,6 +60,7 @@ const EngineManager = (() => {
         
         const pdfTeXEngine = new window.PdfTeXEngine();
         await pdfTeXEngine.loadEngine();
+        pdfTeXEngine.setTexliveEndpoint("https://texlive.resumecorgi.com/");
         
         // TODO: Wait for the service worker to be activated?
         // if (navigator.serviceWorker.controller) {
