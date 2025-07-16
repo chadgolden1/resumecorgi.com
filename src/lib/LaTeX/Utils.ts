@@ -21,7 +21,7 @@ export class Utils {
     return Array.from(tempDiv.querySelectorAll('li'))
       .map(li => li.textContent?.trim() || '')
       .filter(item => item && item.length > 0)
-      .map(item => `  \\item ${item}`)
+      .map(item => `  \\item ${this.escapeLaTeX(item)}`)
       .join('\n');
   }
 
@@ -131,7 +131,7 @@ ${items}
 
     const items = contacts
       .filter(c => c && c.length > 0)
-      .map(c => `\\href{${this.getHref(this.escapeLaTeX(c))}}{${this.escapeLaTeX(c)}}`);
+      .map(c => `\\href{${this.escapeLaTeX(this.getHref(c))}}{${this.escapeLaTeX(c)}}`);
     
     const MAX_ITEMS_PER_LINE = 3;
     let result = [];
