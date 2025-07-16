@@ -15,6 +15,7 @@ export interface PdfTeXEngine {
   setEngineMainFile(fileName: string): void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   compileLaTeX(): Promise<any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   compileFormat(): Promise<any>;
   loadEngine: () => Promise<void>;
   setTexliveEndpoint(url: string): void;
