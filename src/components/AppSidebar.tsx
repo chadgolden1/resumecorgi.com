@@ -8,6 +8,7 @@ import { ResumeImporter } from "./ResumeImporter";
 import { FormData } from "@/types";
 import { TemplateSwitcher } from "./TemplateSwitcher";
 import { useResume } from '@/lib/ResumeContext';
+import Button from "./Button";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -478,13 +479,12 @@ function AppSidebar({
                     </label>
                   </div>
                   {selectedResumeIds.size > 0 && (
-                    <button
+                    <Button
+                      theme="danger"
+                      text={`Delete (${selectedResumeIds.size})`}
                       onClick={handleDeleteSelected}
-                      className="flex items-center space-x-1 px-3 py-1.5 text-sm bg-red-500 hover:bg-red-600 text-white rounded-md transition-colors"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                      <span>Delete ({selectedResumeIds.size})</span>
-                    </button>
+                      className="text-sm py-1.5"
+                    />
                   )}
                 </div>
               )}
