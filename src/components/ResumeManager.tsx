@@ -182,10 +182,11 @@ function ResumeManager({ onNewResume }: ResumeManagerProps) {
   };
 
   const toggleSelectAll = () => {
-    if (selectedResumeIds.size === savedResumes.length) {
+    const selectableResumes = savedResumes.filter(r => r.name !== resumeName);
+    if (selectedResumeIds.size === selectableResumes.length) {
       setSelectedResumeIds(new Set());
     } else {
-      setSelectedResumeIds(new Set(savedResumes.map(r => r.id)));
+      setSelectedResumeIds(new Set(selectableResumes.map(r => r.id)));
     }
   };
 
@@ -256,22 +257,29 @@ function ResumeManager({ onNewResume }: ResumeManagerProps) {
               <DropdownMenuLabel className="mb-0.75 text-xs">Recent</DropdownMenuLabel>
               {savedResumes.length > 0 ? (
                 <>
-                  {savedResumes.slice(0, 5).map((resume) => (
-                    <div key={resume.id} className="group/item">
-                      <DropdownMenuItem
-                        onClick={() => handleLoadResume(resume.id)}
-                        className="text-xs pr-8"
-                      >
-                        <FileText className="mr-0.5" />
-                        <div className="flex-1 overflow-hidden">
-                          <div className="truncate font-medium">{resume.name}</div>
-                          <div className="text-muted-foreground">
-                            {formatRelativeTime(resume.lastUpdated)}
+                  {savedResumes.slice(0, 5).map((resume) => {
+                    const isCurrent = resume.name === resumeName;
+                    return (
+                      <div key={resume.id} className="group/item">
+                        <DropdownMenuItem
+                          onClick={() => !isCurrent && handleLoadResume(resume.id)}
+                          className={`text-xs pr-8 ${isCurrent ? 'opacity-50 cursor-default' : ''}`}
+                          disabled={isCurrent}
+                        >
+                          <FileText className="mr-0.5" />
+                          <div className="flex-1 overflow-hidden">
+                            <div className="truncate font-medium">
+                              {resume.name}
+                              {isCurrent && <span className="text-gray-500 dark:text-gray-400 ml-1">(current)</span>}
+                            </div>
+                            <div className="text-muted-foreground">
+                              {formatRelativeTime(resume.lastUpdated)}
+                            </div>
                           </div>
-                        </div>
-                      </DropdownMenuItem>
-                    </div>
-                  ))}
+                        </DropdownMenuItem>
+                      </div>
+                    );
+                  })}
                 </>
               ) : (
                 <DropdownMenuItem disabled>
@@ -301,10 +309,11 @@ function ResumeManager({ onNewResume }: ResumeManagerProps) {
                 <div className="flex items-center space-x-2">
                   <label className="text-sm font-medium">
                     <Checkbox
-                      checked={selectedResumeIds.size === savedResumes.length && savedResumes.length > 0}
+                      checked={savedResumes.filter(r => r.name !== resumeName).length > 0 && 
+                               selectedResumeIds.size === savedResumes.filter(r => r.name !== resumeName).length}
                       onCheckedChange={() => toggleSelectAll()}
                     />
-                    <span className="ms-2">Select all ({savedResumes.length})</span>
+                    <span className="ms-2">Select all ({savedResumes.filter(r => r.name !== resumeName).length})</span>
                   </label>
                 </div>
                 <Button
@@ -321,38 +330,45 @@ function ResumeManager({ onNewResume }: ResumeManagerProps) {
               dark:[&::-webkit-scrollbar-track]:bg-zinc-950/25 dark:[&::-webkit-scrollbar-thumb]:bg-zinc-500/70">
               {savedResumes.length > 0 ? (
                 <div className="space-y-2">
-                  {savedResumes.map((resume) => (
-                    <div
-                      key={resume.id}
-                      className={`group flex items-center justify-between py-2 px-3 border rounded-lg ${
-                        selectedResumeIds.has(resume.id) 
-                          ? 'bg-purple-50 dark:bg-purple-950/30 border-purple-300 dark:border-purple-700' 
-                          : 'border-gray-300 dark:border-zinc-800 hover:bg-gray-100 dark:hover:bg-zinc-800'
-                      }`}
-                    >
-                      <div className="flex items-center space-x-3 flex-1 min-w-0">
-                        <Checkbox
-                          checked={selectedResumeIds.has(resume.id)}
-                          onCheckedChange={() => toggleResumeSelection(resume.id)}
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                        <div 
-                          className="flex items-center space-x-3 flex-1 min-w-0 cursor-pointer"
-                          onClick={() => handleLoadResume(resume.id)}
-                        >
-                          <FileText className="font-thin h-6 w-6 text-gray-700 dark:text-gray-300 flex-shrink-0" strokeWidth={1.5} />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                              {resume.name}
-                            </p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                              Modified {formatRelativeTime(resume.lastUpdated)}
-                            </p>
+                  {savedResumes.map((resume) => {
+                    const isCurrent = resume.name === resumeName;
+                    return (
+                      <div
+                        key={resume.id}
+                        className={`group flex items-center justify-between py-2 px-3 border rounded-lg transition-colors ${
+                          isCurrent
+                            ? 'bg-gray-100 dark:bg-zinc-800 border-gray-300 dark:border-zinc-700'
+                            : selectedResumeIds.has(resume.id) 
+                              ? 'bg-purple-50 dark:bg-purple-950/30 border-purple-300 dark:border-purple-700' 
+                              : 'border-gray-300 dark:border-zinc-800 hover:bg-gray-100 dark:hover:bg-zinc-800'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3 flex-1 min-w-0">
+                          <Checkbox
+                            checked={selectedResumeIds.has(resume.id)}
+                            onCheckedChange={() => !isCurrent && toggleResumeSelection(resume.id)}
+                            onClick={(e) => e.stopPropagation()}
+                            disabled={isCurrent}
+                          />
+                          <div 
+                            className={`flex items-center space-x-3 flex-1 min-w-0 ${isCurrent ? 'cursor-default' : 'cursor-pointer'}`}
+                            onClick={() => !isCurrent && handleLoadResume(resume.id)}
+                          >
+                            <FileText className="font-thin h-6 w-6 text-gray-700 dark:text-gray-300 flex-shrink-0" strokeWidth={1.5} />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                                {resume.name}
+                                {isCurrent && <span className="text-gray-500 dark:text-gray-400 ml-2 text-xs">(current)</span>}
+                              </p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                Modified {formatRelativeTime(resume.lastUpdated)}
+                              </p>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-8 text-gray-500 dark:text-gray-400">
