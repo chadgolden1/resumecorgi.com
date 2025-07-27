@@ -91,13 +91,29 @@ function AppSidebar({
   };
 
   const handleSaveAsCopy = () => {
-    const newName = prompt('Enter name for the resume copy:', `${resumeName}-copy`);
-    if (newName && newName.trim()) {
-      const resumeId = saveResumeCopy({ formData, sections, templateId: selectedTemplate.id }, newName.trim());
-      if (resumeId) {
-        setSavedResumes(getSavedResumes());
-        alert('Resume copy saved successfully!');
-      }
+    // Generate auto-incrementing name like "resume-name (1)", "resume-name (2)", etc.
+    const baseName = resumeName.replace(/ \(\d+\)$/, ''); // Remove existing (n) suffix if present
+    const existingResumes = getSavedResumes();
+    const existingNames = existingResumes.map(r => r.name);
+    
+    let copyNumber = 1;
+    let newName = `${baseName} (${copyNumber})`;
+    
+    // Find the next available number
+    while (existingNames.includes(newName)) {
+      copyNumber++;
+      newName = `${baseName} (${copyNumber})`;
+    }
+    
+    // Save the copy
+    const resumeId = saveResumeCopy({ formData, sections, templateId: selectedTemplate.id }, newName);
+    if (resumeId) {
+      // Immediately switch to the new copy
+      setResumeName(newName);
+      setSavedResumes(getSavedResumes());
+      
+      // Show a brief success message (optional - could use a toast instead)
+      console.log(`Saved as: ${newName}`);
     }
   };
 
