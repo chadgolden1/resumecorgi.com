@@ -48,6 +48,7 @@ function AppSidebar({
   const [isEditingName, setIsEditingName] = useState(false);
   const [tempName, setTempName] = useState(resumeName);
   const [savedResumes, setSavedResumes] = useState(getSavedResumes());
+  const [isOpenDialogOpen, setIsOpenDialogOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -111,7 +112,14 @@ function AppSidebar({
         if (savedCopy) {
           setResumeName(savedCopy.name);
         }
+        setIsOpenDialogOpen(false);
       }
+    }
+  };
+
+  const handleNewResume = () => {
+    if (window.confirm('Creating a new resume will clear your current work. Continue?')) {
+      resetData?.();
     }
   };
 
@@ -122,6 +130,13 @@ function AppSidebar({
       }
     }
   };
+
+  // Refresh saved resumes when dialog opens
+  useEffect(() => {
+    if (isOpenDialogOpen) {
+      setSavedResumes(getSavedResumes());
+    }
+  }, [isOpenDialogOpen]);
 
   return (
     <Sidebar
@@ -196,11 +211,11 @@ function AppSidebar({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-64">
                     <DropdownMenuLabel>My Resumes</DropdownMenuLabel>
-                    <DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleNewResume}>
                       <File className="mr-0.5 h-4 w-4" />
                       New
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setIsOpenDialogOpen(true)}>
                       <FolderOpen className="mr-0.5 h-4 w-4" />
                       Open
                     </DropdownMenuItem>
@@ -356,6 +371,63 @@ function AppSidebar({
             </div>
           </SidebarGroupContent>
         </SidebarGroup>
+        
+        {/* Open Resume Dialog */}
+        <Dialog open={isOpenDialogOpen} onOpenChange={setIsOpenDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle>
+                <FolderOpen className="pb-1 inline me-1 size-6" strokeWidth={1.334} />
+                Open Resume
+              </DialogTitle>
+              <DialogDescription>
+                Select a saved resume to open. Your current work will be replaced.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="overflow-y-auto max-h-[50vh]">
+              {savedResumes.length > 0 ? (
+                <div className="space-y-2">
+                  {savedResumes.map((resume) => (
+                    <div
+                      key={resume.id}
+                      className="group flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer"
+                      onClick={() => handleLoadResume(resume.id)}
+                    >
+                      <div className="flex items-center space-x-3 flex-1 min-w-0">
+                        <FileText className="h-5 w-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                            {resume.name}
+                          </p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            Created: {new Date(resume.createdAt).toLocaleDateString()} • 
+                            Modified: {new Date(resume.lastUpdated).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteResume(resume.id, resume.name);
+                        }}
+                        className="ml-2 p-1.5 text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Delete resume"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p>No saved resumes found</p>
+                  <p className="text-sm mt-1">Save your current resume using "Save As Copy" to get started</p>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </SidebarContent>
       <SidebarFooter className="text-center bg-gray-100/10 dark:bg-zinc-800/60">
         <div className="text-xs text-gray-600 dark:text-gray-400">
