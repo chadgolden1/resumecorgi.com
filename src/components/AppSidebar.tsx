@@ -16,6 +16,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "./ui/dropdown-menu";
+import { Checkbox } from "./ui/checkbox";
 import { getSavedResumes, saveResumeCopy, loadResumeCopy, deleteResumeCopy } from '@/lib/StorageService';
 import { createSectionsFromFormData } from '@/lib/DataInitializer';
 import { toast } from "sonner";
@@ -80,6 +81,7 @@ function AppSidebar({
   const [tempName, setTempName] = useState(resumeName);
   const [savedResumes, setSavedResumes] = useState(getSavedResumes());
   const [isOpenDialogOpen, setIsOpenDialogOpen] = useState(false);
+  const [selectedResumeIds, setSelectedResumeIds] = useState<Set<string>>(new Set());
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -176,12 +178,56 @@ function AppSidebar({
     }
   };
 
-  // Refresh saved resumes when dialog opens
+  // Refresh saved resumes when dialog opens and clear selections
   useEffect(() => {
     if (isOpenDialogOpen) {
       setSavedResumes(getSavedResumes());
+      setSelectedResumeIds(new Set());
     }
   }, [isOpenDialogOpen]);
+
+  const handleDeleteSelected = () => {
+    const selectedCount = selectedResumeIds.size;
+    if (selectedCount === 0) return;
+    
+    const message = selectedCount === 1 
+      ? 'Are you sure you want to delete this resume?'
+      : `Are you sure you want to delete ${selectedCount} resumes?`;
+    
+    if (window.confirm(message)) {
+      let deletedCount = 0;
+      selectedResumeIds.forEach(id => {
+        if (deleteResumeCopy(id)) {
+          deletedCount++;
+        }
+      });
+      
+      setSavedResumes(getSavedResumes());
+      setSelectedResumeIds(new Set());
+      
+      if (deletedCount > 0) {
+        toast.success(`Deleted ${deletedCount} resume${deletedCount > 1 ? 's' : ''}`);
+      }
+    }
+  };
+
+  const toggleResumeSelection = (resumeId: string) => {
+    const newSelection = new Set(selectedResumeIds);
+    if (newSelection.has(resumeId)) {
+      newSelection.delete(resumeId);
+    } else {
+      newSelection.add(resumeId);
+    }
+    setSelectedResumeIds(newSelection);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedResumeIds.size === savedResumes.length) {
+      setSelectedResumeIds(new Set());
+    } else {
+      setSelectedResumeIds(new Set(savedResumes.map(r => r.id)));
+    }
+  };
 
   return (
     <Sidebar
@@ -416,50 +462,77 @@ function AppSidebar({
                 Open Resume
               </DialogTitle>
               <DialogDescription>
-                Select a saved resume to open. Your current work will be replaced.
+                Select a saved resume to open or manage your saved copies.
               </DialogDescription>
             </DialogHeader>
-            <div className="overflow-y-auto max-h-[50vh]">
-              {savedResumes.length > 0 ? (
-                <div className="space-y-2">
-                  {savedResumes.map((resume) => (
-                    <div
-                      key={resume.id}
-                      className="group flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer"
-                      onClick={() => handleLoadResume(resume.id)}
+            <div className="space-y-4">
+              {savedResumes.length > 0 && (
+                <div className="flex items-center justify-between px-1">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      checked={selectedResumeIds.size === savedResumes.length && savedResumes.length > 0}
+                      onCheckedChange={() => toggleSelectAll()}
+                    />
+                    <label className="text-sm font-medium">
+                      Select all ({savedResumes.length})
+                    </label>
+                  </div>
+                  {selectedResumeIds.size > 0 && (
+                    <button
+                      onClick={handleDeleteSelected}
+                      className="flex items-center space-x-1 px-3 py-1.5 text-sm bg-red-500 hover:bg-red-600 text-white rounded-md transition-colors"
                     >
-                      <div className="flex items-center space-x-3 flex-1 min-w-0">
-                        <FileText className="h-5 w-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                            {resume.name}
-                          </p>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
-                            Created: {new Date(resume.createdAt).toLocaleDateString()} • 
-                            Modified: {new Date(resume.lastUpdated).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteResume(resume.id, resume.name);
-                        }}
-                        className="ml-2 p-1.5 text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 opacity-0 group-hover:opacity-100 transition-opacity"
-                        title="Delete resume"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                  <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>No saved resumes found</p>
-                  <p className="text-sm mt-1">Save your current resume using "Save As Copy" to get started</p>
+                      <Trash2 className="h-3.5 w-3.5" />
+                      <span>Delete ({selectedResumeIds.size})</span>
+                    </button>
+                  )}
                 </div>
               )}
+              <div className="overflow-y-auto max-h-[50vh]">
+                {savedResumes.length > 0 ? (
+                  <div className="space-y-2">
+                    {savedResumes.map((resume) => (
+                      <div
+                        key={resume.id}
+                        className={`group flex items-center justify-between p-3 border rounded-lg transition-colors ${
+                          selectedResumeIds.has(resume.id) 
+                            ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-300 dark:border-blue-700' 
+                            : 'hover:bg-gray-50 dark:hover:bg-zinc-800'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3 flex-1 min-w-0">
+                          <Checkbox
+                            checked={selectedResumeIds.has(resume.id)}
+                            onCheckedChange={() => toggleResumeSelection(resume.id)}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                          <div 
+                            className="flex items-center space-x-3 flex-1 min-w-0 cursor-pointer"
+                            onClick={() => handleLoadResume(resume.id)}
+                          >
+                            <FileText className="h-5 w-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                                {resume.name}
+                              </p>
+                              <p className="text-sm text-gray-500 dark:text-gray-400">
+                                Created: {new Date(resume.createdAt).toLocaleDateString()} • 
+                                Modified: {formatRelativeTime(resume.lastUpdated)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <p>No saved resumes found</p>
+                    <p className="text-sm mt-1">Save your current resume using "Save As Copy" to get started</p>
+                  </div>
+                )}
+              </div>
             </div>
           </DialogContent>
         </Dialog>
