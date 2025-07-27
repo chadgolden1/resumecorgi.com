@@ -39,6 +39,36 @@ const exportJson = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>, onExport
 
 const corgiSize: number = 84;
 
+// Format relative time like "3 days ago", "2 weeks ago", etc.
+const formatRelativeTime = (dateString: string): string => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  
+  if (diffDays === 0) {
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    if (diffHours === 0) {
+      const diffMinutes = Math.floor(diffMs / (1000 * 60));
+      if (diffMinutes === 0) return 'just now';
+      if (diffMinutes === 1) return '1 minute ago';
+      return `${diffMinutes} minutes ago`;
+    }
+    if (diffHours === 1) return '1 hour ago';
+    return `${diffHours} hours ago`;
+  }
+  
+  if (diffDays === 1) return 'yesterday';
+  if (diffDays < 7) return `${diffDays} days ago`;
+  
+  const diffWeeks = Math.floor(diffDays / 7);
+  if (diffWeeks === 1) return '1 week ago';
+  if (diffWeeks < 4) return `${diffWeeks} weeks ago`;
+  
+  // More than a month, show the actual date
+  return date.toLocaleDateString();
+};
+
 function AppSidebar({
   resetData,
   sampleData,
@@ -205,27 +235,27 @@ function AppSidebar({
               </div>
             ) : (
               <div className="flex items-center space-x-1 group">
-                <span className="flex-1 text-sm text-gray-700 dark:text-gray-300 font-medium truncate">
+                <span className="flex-1 text-sm text-gray-700 dark:text-gray-300 font-bold truncate">
                   {resumeName}
                 </span>
                 <button
                   onClick={handleStartEdit}
-                  className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                   title="Edit resume name"
                 >
-                  <Edit2 className="size-3" />
+                  <Edit2 className="size-4" />
                 </button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
-                      className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                       title="Resume options"
                     >
-                      <MoreVertical className="size-3" />
+                      <MoreVertical className="size-4" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-64">
-                    <DropdownMenuLabel>My Resumes</DropdownMenuLabel>
+                    <DropdownMenuLabel className="mb-0.75 text-xs">Resume</DropdownMenuLabel>
                     <DropdownMenuItem onClick={handleNewResume}>
                       <File className="mr-0.5 h-4 w-4" />
                       New
@@ -239,33 +269,23 @@ function AppSidebar({
                       Save As Copy
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuLabel className="text-sm">Recent</DropdownMenuLabel>
+                    <DropdownMenuLabel className="mb-0.75 text-xs">Recent</DropdownMenuLabel>
                     {savedResumes.length > 0 ? (
                       <>
-                        {savedResumes.map((resume) => (
+                        {savedResumes.slice(0, 5).map((resume) => (
                           <div key={resume.id} className="group/item">
                             <DropdownMenuItem
                               onClick={() => handleLoadResume(resume.id)}
                               className="pr-8"
                             >
-                              <FileText className="mr-2 h-4 w-4" />
+                              <FileText className="mr-0.5" />
                               <div className="flex-1 overflow-hidden">
                                 <div className="truncate text-sm">{resume.name}</div>
                                 <div className="text-xs text-muted-foreground">
-                                  {new Date(resume.lastUpdated).toLocaleDateString()}
+                                  {formatRelativeTime(resume.lastUpdated)}
                                 </div>
                               </div>
                             </DropdownMenuItem>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteResume(resume.id, resume.name);
-                              }}
-                              className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/item:opacity-100 p-1 text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300"
-                              title="Delete resume"
-                            >
-                              <Trash2 className="size-3" />
-                            </button>
                           </div>
                         ))}
                       </>
