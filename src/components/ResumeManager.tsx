@@ -240,19 +240,19 @@ function ResumeManager({ onNewResume }: ResumeManagerProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-64">
               <DropdownMenuLabel className="mb-0.75 text-xs">Resume</DropdownMenuLabel>
-              <DropdownMenuItem onClick={onNewResume}>
+              <DropdownMenuItem className="text-xs" onClick={onNewResume}>
                 <File className="mr-0.5 h-4 w-4" />
                 New
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setIsOpenDialogOpen(true)}>
+              <DropdownMenuItem className="text-xs" onClick={() => setIsOpenDialogOpen(true)}>
                 <FolderOpen className="mr-0.5 h-4 w-4" />
                 Open
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleSaveAsCopy}>
+              <DropdownMenuItem className="text-xs" onClick={handleSaveAsCopy}>
                 <SaveAllIcon className="mr-0.5 h-4 w-4" />
                 Save As Copy
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
+              <DropdownMenuSeparator className="bg-gray-300 dark:bg-zinc-800" />
               <DropdownMenuLabel className="mb-0.75 text-xs">Recent</DropdownMenuLabel>
               {savedResumes.length > 0 ? (
                 <>
@@ -260,12 +260,12 @@ function ResumeManager({ onNewResume }: ResumeManagerProps) {
                     <div key={resume.id} className="group/item">
                       <DropdownMenuItem
                         onClick={() => handleLoadResume(resume.id)}
-                        className="pr-8"
+                        className="text-xs pr-8"
                       >
                         <FileText className="mr-0.5" />
                         <div className="flex-1 overflow-hidden">
-                          <div className="truncate text-sm">{resume.name}</div>
-                          <div className="text-xs text-muted-foreground">
+                          <div className="truncate font-medium">{resume.name}</div>
+                          <div className="text-muted-foreground">
                             {formatRelativeTime(resume.lastUpdated)}
                           </div>
                         </div>
@@ -288,8 +288,8 @@ function ResumeManager({ onNewResume }: ResumeManagerProps) {
         <DialogContent className="max-w-2xl max-h-[80vh]">
           <DialogHeader>
             <DialogTitle>
-              <FolderOpen className="pb-1 inline me-1 size-6" strokeWidth={1.334} />
-              Open Resume
+              <FolderOpen className="pb-1 inline me-2 size-6" strokeWidth={1.334} />
+              Open
             </DialogTitle>
             <DialogDescription>
               Select a saved resume to open or manage your saved copies.
@@ -299,34 +299,35 @@ function ResumeManager({ onNewResume }: ResumeManagerProps) {
             {savedResumes.length > 0 && (
               <div className="flex items-center justify-between px-1">
                 <div className="flex items-center space-x-2">
-                  <Checkbox
-                    checked={selectedResumeIds.size === savedResumes.length && savedResumes.length > 0}
-                    onCheckedChange={() => toggleSelectAll()}
-                  />
                   <label className="text-sm font-medium">
-                    Select all ({savedResumes.length})
+                    <Checkbox
+                      checked={selectedResumeIds.size === savedResumes.length && savedResumes.length > 0}
+                      onCheckedChange={() => toggleSelectAll()}
+                    />
+                    <span className="ms-2">Select all ({savedResumes.length})</span>
                   </label>
                 </div>
-                {selectedResumeIds.size > 0 && (
-                  <Button
-                    theme="danger"
-                    text={`Delete (${selectedResumeIds.size})`}
-                    onClick={handleDeleteSelected}
-                    className="text-sm py-1.5"
-                  />
-                )}
+                <Button
+                  theme={`${selectedResumeIds.size === 0 ? 'default' : 'danger'}`}
+                  text={selectedResumeIds.size > 0 ? `Delete (${selectedResumeIds.size} selected)` : "Delete (None selected)"}
+                  onClick={handleDeleteSelected}
+                  className={`text-sm py-1.5`}
+                />
               </div>
             )}
-            <div className="overflow-y-auto max-h-[50vh]">
+            <div className="
+              overflow-y-auto max-h-[50vh] pr-1
+              [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-zinc-300 [&::-webkit-scrollbar-thumb]:bg-zinc-400 
+              dark:[&::-webkit-scrollbar-track]:bg-zinc-950/25 dark:[&::-webkit-scrollbar-thumb]:bg-zinc-500/70">
               {savedResumes.length > 0 ? (
                 <div className="space-y-2">
                   {savedResumes.map((resume) => (
                     <div
                       key={resume.id}
-                      className={`group flex items-center justify-between p-3 border rounded-lg transition-colors ${
+                      className={`group flex items-center justify-between py-2 px-3 border rounded-lg ${
                         selectedResumeIds.has(resume.id) 
-                          ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-300 dark:border-blue-700' 
-                          : 'hover:bg-gray-50 dark:hover:bg-zinc-800'
+                          ? 'bg-purple-50 dark:bg-purple-950/30 border-purple-300 dark:border-purple-700' 
+                          : 'border-gray-300 dark:border-zinc-800 hover:bg-gray-100 dark:hover:bg-zinc-800'
                       }`}
                     >
                       <div className="flex items-center space-x-3 flex-1 min-w-0">
@@ -339,14 +340,13 @@ function ResumeManager({ onNewResume }: ResumeManagerProps) {
                           className="flex items-center space-x-3 flex-1 min-w-0 cursor-pointer"
                           onClick={() => handleLoadResume(resume.id)}
                         >
-                          <FileText className="h-5 w-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                          <FileText className="font-thin h-6 w-6 text-gray-700 dark:text-gray-300 flex-shrink-0" strokeWidth={1.5} />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                               {resume.name}
                             </p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                              Created: {new Date(resume.createdAt).toLocaleDateString()} • 
-                              Modified: {formatRelativeTime(resume.lastUpdated)}
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              Modified {formatRelativeTime(resume.lastUpdated)}
                             </p>
                           </div>
                         </div>
