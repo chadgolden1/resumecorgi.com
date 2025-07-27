@@ -9,7 +9,7 @@ import { usePdfRenderer } from "../lib/hooks/PdfRenderer";
 const MAX_WIDTH = 800;
 
 function Preview() {
-  const { formData, sections, selectedTemplate, resumeName, setResumeName } = useResume();
+  const { formData, sections, selectedTemplate } = useResume();
   const [containerHeight, setContainerHeight] = useState<number | null>(null);
   const [canvasWidthPx, setCanvasWidthPx] = useState<number>(MAX_WIDTH);
 
@@ -120,10 +120,8 @@ function Preview() {
           error={error} 
           isLoading={isCompiling} 
           pageRendered={pdfDoc !== null}
-          resumeName={resumeName}
           onDownloadPdf={downloadPdf}
           onDownloadLaTeX={downloadLaTeX}
-          onResumeNameChange={setResumeName}
         />
       </div>
 

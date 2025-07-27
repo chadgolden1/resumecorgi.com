@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarTrigger } from "@/components/ui/sidebar"
 import SortableNav from "./SortableNav";
-import { DownloadCloud, EraserIcon, ExternalLink, FileJson, FlaskConical, ListPlus, UploadCloud } from "lucide-react";
+import { DownloadCloud, EraserIcon, ExternalLink, FileJson, FlaskConical, ListPlus, UploadCloud, Edit2, Check, X } from "lucide-react";
 import Corgi from "./Corgi";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { ResumeImporter } from "./ResumeImporter";
@@ -34,7 +34,49 @@ function AppSidebar({
   onExport,
   onImportJsonFormData,
 }: SidebarProps) {
-  const { addGenericSection } = useResume();
+  const { addGenericSection, resumeName, setResumeName } = useResume();
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [tempName, setTempName] = useState(resumeName);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setTempName(resumeName);
+  }, [resumeName]);
+
+  useEffect(() => {
+    if (isEditingName && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditingName]);
+
+  const handleStartEdit = () => {
+    setTempName(resumeName);
+    setIsEditingName(true);
+  };
+
+  const handleSaveEdit = () => {
+    const trimmedName = tempName.trim();
+    if (trimmedName && trimmedName !== resumeName) {
+      setResumeName(trimmedName);
+    }
+    setIsEditingName(false);
+  };
+
+  const handleCancelEdit = () => {
+    setTempName(resumeName);
+    setIsEditingName(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSaveEdit();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      handleCancelEdit();
+    }
+  };
 
   return (
     <Sidebar
@@ -55,6 +97,51 @@ function AppSidebar({
         <SidebarGroup>
           <SidebarGroupContent>
             <TemplateSwitcher />
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-gray-700 dark:text-zinc-300">Resume Name</SidebarGroupLabel>
+          <SidebarGroupContent className="px-2">
+            {isEditingName ? (
+              <div className="flex items-center space-x-1">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={tempName}
+                  onChange={(e) => setTempName(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  className="flex-1 px-2 py-1 text-sm bg-white dark:bg-zinc-700 border border-gray-300 dark:border-zinc-600 rounded text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="Resume name"
+                />
+                <button
+                  onClick={handleSaveEdit}
+                  className="p-1 text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
+                  title="Save name"
+                >
+                  <Check className="size-4" />
+                </button>
+                <button
+                  onClick={handleCancelEdit}
+                  className="p-1 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                  title="Cancel edit"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-1 group">
+                <span className="flex-1 text-sm text-gray-700 dark:text-gray-300 font-medium truncate">
+                  {resumeName}
+                </span>
+                <button
+                  onClick={handleStartEdit}
+                  className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Edit resume name"
+                >
+                  <Edit2 className="size-3" />
+                </button>
+              </div>
+            )}
           </SidebarGroupContent>
         </SidebarGroup>
         <SidebarGroup className="block lg:hidden py-0">
