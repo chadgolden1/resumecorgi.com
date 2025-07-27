@@ -18,6 +18,7 @@ import {
 } from "./ui/dropdown-menu";
 import { getSavedResumes, saveResumeCopy, loadResumeCopy, deleteResumeCopy } from '@/lib/StorageService';
 import { createSectionsFromFormData } from '@/lib/DataInitializer';
+import { toast } from "sonner";
 
 interface SidebarProps {
   resetData?: () => void;
@@ -111,9 +112,7 @@ function AppSidebar({
       // Immediately switch to the new copy
       setResumeName(newName);
       setSavedResumes(getSavedResumes());
-      
-      // Show a brief success message (optional - could use a toast instead)
-      console.log(`Saved as: ${newName}`);
+      toast.success(`Saved as copy: ${newName}`);
     }
   };
 
@@ -176,7 +175,7 @@ function AppSidebar({
           </SidebarGroupContent>
         </SidebarGroup>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-gray-700 dark:text-zinc-300">Resume Name</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-gray-700 dark:text-zinc-300">Resume</SidebarGroupLabel>
           <SidebarGroupContent className="px-2">
             {isEditingName ? (
               <div className="flex items-center space-x-1">
@@ -240,7 +239,7 @@ function AppSidebar({
                       Save As Copy
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuLabel className="text-sm">Recent Resumes</DropdownMenuLabel>
+                    <DropdownMenuLabel className="text-sm">Recent</DropdownMenuLabel>
                     {savedResumes.length > 0 ? (
                       <>
                         {savedResumes.map((resume) => (
