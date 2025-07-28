@@ -141,14 +141,8 @@ function Editor() {
     if (!window.confirm('Loading sample data will overwrite any edits you have made. This cannot be undone. Would you like to proceed?')) {
       return;
     }
-
-    const newResumeId = crypto.randomUUID();
-    const newResumeName = generateDefaultResumeName(sampleFormData);
-    
     setFormData(sampleFormData);
     setSections(createSectionsFromFormData(sampleFormData));
-    setCurrentResumeId(newResumeId);
-    setResumeName(newResumeName);
   };
 
   const loadImportedJsonResume = (importedFormData: FormData) => {

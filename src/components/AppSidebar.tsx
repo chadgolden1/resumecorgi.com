@@ -1,7 +1,7 @@
 import React from "react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarTrigger } from "@/components/ui/sidebar"
 import SortableNav from "./SortableNav";
-import { DownloadCloud, EraserIcon, ExternalLink, FileJson, FlaskConical, ListPlus, UploadCloud } from "lucide-react";
+import { DownloadCloud, ExternalLink, FileJson, FlaskConical, ListPlus, UploadCloud } from "lucide-react";
 import Corgi from "./Corgi";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { ResumeImporter } from "./ResumeImporter";
@@ -15,11 +15,6 @@ interface SidebarProps {
   sampleData?: () => void;
   onExport: () => void;
   onImportJsonFormData: (formData: FormData) => void;
-}
-
-const clearForm = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>, resetData?: () => void) => {
-  e.preventDefault();
-  resetData?.();
 }
 
 const exportJson = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>, onExport: () => void) => {
@@ -144,14 +139,6 @@ function AppSidebar({
                     <ResumeImporter onComplete={onImportJsonFormData} />
                   </DialogContent>
                 </Dialog>
-              </SidebarMenuItem>
-              <SidebarMenuItem key={"menu-clear-resume"}>
-                <SidebarMenuButton asChild className="hover:bg-gray-200 dark:hover:bg-zinc-950/70">
-                  <a href={"#"} onClick={(e) => clearForm(e, resetData)}>
-                    <EraserIcon />
-                    <span>Clear Form</span>
-                  </a>
-                </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem key={"menu-sample-resume"}>
                 <SidebarMenuButton asChild className="hover:bg-gray-200 dark:hover:bg-zinc-950/70">
