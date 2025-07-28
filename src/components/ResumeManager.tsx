@@ -147,29 +147,27 @@ function ResumeManager({ onNewResume }: ResumeManagerProps) {
   };
 
   const handleLoadResume = (resumeId: string) => {
-    if (window.confirm('Loading this resume will replace your current work. Continue?')) {
-      const resumeData = loadResumeCopy(resumeId);
-      if (resumeData) {
-        setFormData(resumeData.formData);
-        setSections(resumeData.sections);
-        
-        // Update the template if it's stored
-        if (resumeData.templateId) {
-          const template = TemplateFactory.getAvailableTemplates().find(t => t.id === resumeData.templateId);
-          if (template) {
-            setSelectedTemplate(template);
-          }
+    const resumeData = loadResumeCopy(resumeId);
+    if (resumeData) {
+      setFormData(resumeData.formData);
+      setSections(resumeData.sections);
+      
+      // Update the template if it's stored
+      if (resumeData.templateId) {
+        const template = TemplateFactory.getAvailableTemplates().find(t => t.id === resumeData.templateId);
+        if (template) {
+          setSelectedTemplate(template);
         }
-        
-        // Update the name from the saved copy
-        const savedCopy = savedResumes.find(r => r.id === resumeId);
-        if (savedCopy) {
-          setResumeName(savedCopy.name);
-        }
-        // Set the currentResumeId to track which resume is loaded
-        setCurrentResumeId(resumeId);
-        setIsOpenDialogOpen(false);
       }
+      
+      // Update the name from the saved copy
+      const savedCopy = savedResumes.find(r => r.id === resumeId);
+      if (savedCopy) {
+        setResumeName(savedCopy.name);
+      }
+      // Set the currentResumeId to track which resume is loaded
+      setCurrentResumeId(resumeId);
+      setIsOpenDialogOpen(false);
     }
   };
 
