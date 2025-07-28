@@ -13,6 +13,7 @@ import { Checkbox } from "./ui/checkbox";
 import Button from "./Button";
 import { getSavedResumes, loadResumeCopy, deleteResumeCopy, renameResumeCopy, updateOrCreateResumeCopy } from '@/lib/StorageService';
 import { useResume } from '@/lib/ResumeContext';
+import { TemplateFactory } from '@/lib/LaTeX/TemplateFactory';
 import { toast } from "sonner";
 
 interface ResumeManagerProps {
@@ -50,7 +51,7 @@ const formatRelativeTime = (dateString: string): string => {
 };
 
 function ResumeManager({ onNewResume }: ResumeManagerProps) {
-  const { formData, sections, resumeName, setResumeName, setFormData, setSections, selectedTemplate, currentResumeId, setCurrentResumeId } = useResume();
+  const { formData, sections, resumeName, setResumeName, setFormData, setSections, selectedTemplate, currentResumeId, setCurrentResumeId, setSelectedTemplate } = useResume();
   const [isEditingName, setIsEditingName] = useState(false);
   const [tempName, setTempName] = useState(resumeName);
   const [savedResumes, setSavedResumes] = useState(getSavedResumes());
@@ -151,6 +152,15 @@ function ResumeManager({ onNewResume }: ResumeManagerProps) {
       if (resumeData) {
         setFormData(resumeData.formData);
         setSections(resumeData.sections);
+        
+        // Update the template if it's stored
+        if (resumeData.templateId) {
+          const template = TemplateFactory.getAvailableTemplates().find(t => t.id === resumeData.templateId);
+          if (template) {
+            setSelectedTemplate(template);
+          }
+        }
+        
         // Update the name from the saved copy
         const savedCopy = savedResumes.find(r => r.id === resumeId);
         if (savedCopy) {
