@@ -12,6 +12,7 @@ import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/AppSidebar';
 import Navbar from '@/components/Navbar';
 import { createSectionsFromFormData, initialFormData, sampleFormData } from '@/lib/DataInitializer';
+import { generateDefaultResumeName } from '@/lib/StorageService';
 import Projects from './forms/Projects';
 import GenericSection from './forms/GenericSection';
 import { downloadResumeAsJson } from '@/lib/ImportExportService';
@@ -34,6 +35,8 @@ function Editor() {
     sections,
     setFormData,
     setSections,
+    setCurrentResumeId,
+    setResumeName,
   } = useResume();
 
   const sectionRenderMapping = useMemo<SectionRenderItem[]>(() => [
@@ -125,8 +128,13 @@ function Editor() {
       return;
     }
 
+    const newResumeId = crypto.randomUUID();
+    const newResumeName = generateDefaultResumeName(initialFormData);
+    
     setFormData(initialFormData);
     setSections(createSectionsFromFormData(initialFormData));
+    setCurrentResumeId(newResumeId);
+    setResumeName(newResumeName);
   };
 
   const resetToSampleData = () => {
@@ -134,8 +142,13 @@ function Editor() {
       return;
     }
 
+    const newResumeId = crypto.randomUUID();
+    const newResumeName = generateDefaultResumeName(sampleFormData);
+    
     setFormData(sampleFormData);
     setSections(createSectionsFromFormData(sampleFormData));
+    setCurrentResumeId(newResumeId);
+    setResumeName(newResumeName);
   };
 
   const loadImportedJsonResume = (importedFormData: FormData) => {

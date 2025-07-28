@@ -9,6 +9,7 @@ interface StoredData {
   sections: Section[];
   templateId?: string;
   resumeName?: string;
+  currentResumeId?: string;
 }
 
 interface SavedResumeMetadata {
@@ -37,6 +38,7 @@ export const loadFromStorage = (): StoredData => {
         sections: parsedData.sections || initialSections,
         templateId: parsedData.templateId || initialTemplateId,
         resumeName: parsedData.resumeName,
+        currentResumeId: parsedData.currentResumeId,
       };
     }
   } catch (error) {
@@ -66,7 +68,7 @@ export const saveToStorage = (data: StoredData): void => {
  * Clear all stored data and return to initial defaults
  * @returns Object containing initial formData and sections
  */
-export const clearStorage = (targetFormData: FormData = initialFormData, targetSections: Section[] = initialSections, targetTemplateId: string = initialTemplateId, targetResumeName?: string): StoredData => {
+export const clearStorage = (targetFormData: FormData = initialFormData, targetSections: Section[] = initialSections, targetTemplateId: string = initialTemplateId, targetResumeName?: string, targetResumeId?: string): StoredData => {
   try {
     localStorage.removeItem(STORAGE_KEY);
   } catch (error) {
@@ -77,7 +79,8 @@ export const clearStorage = (targetFormData: FormData = initialFormData, targetS
     formData: targetFormData,
     sections: targetSections,
     templateId: targetTemplateId,
-    resumeName: targetResumeName
+    resumeName: targetResumeName,
+    currentResumeId: targetResumeId
   };
 };
 
@@ -220,6 +223,47 @@ export const renameResumeCopy = (id: string, newName: string): boolean => {
   } catch (error) {
     console.error('Error renaming resume copy:', error);
     return false;
+  }
+};
+
+/**
+ * Update or create a saved resume copy
+ * @param id The ID of the resume
+ * @param data The resume data to save
+ * @param name The name for this resume
+ * @returns The ID of the saved resume
+ */
+export const updateOrCreateResumeCopy = (id: string, data: StoredData, name: string): string => {
+  try {
+    const savedResumes = getSavedResumesFull();
+    const existingIndex = savedResumes.findIndex(r => r.id === id);
+    const now = new Date().toISOString();
+    
+    if (existingIndex !== -1) {
+      // Update existing resume
+      savedResumes[existingIndex] = {
+        ...savedResumes[existingIndex],
+        name,
+        lastUpdated: now,
+        data
+      };
+    } else {
+      // Create new resume entry
+      const newResume: SavedResume = {
+        id,
+        name,
+        createdAt: now,
+        lastUpdated: now,
+        data
+      };
+      savedResumes.push(newResume);
+    }
+    
+    localStorage.setItem(SAVED_RESUMES_KEY, JSON.stringify(savedResumes));
+    return id;
+  } catch (error) {
+    console.error('Error updating/creating resume copy:', error);
+    throw new Error('Failed to update/create resume copy');
   }
 };
 

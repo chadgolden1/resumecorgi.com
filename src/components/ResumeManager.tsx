@@ -11,7 +11,7 @@ import {
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Checkbox } from "./ui/checkbox";
 import Button from "./Button";
-import { getSavedResumes, saveResumeCopy, loadResumeCopy, deleteResumeCopy } from '@/lib/StorageService';
+import { getSavedResumes, loadResumeCopy, deleteResumeCopy, renameResumeCopy, updateOrCreateResumeCopy } from '@/lib/StorageService';
 import { useResume } from '@/lib/ResumeContext';
 import { toast } from "sonner";
 
@@ -50,7 +50,7 @@ const formatRelativeTime = (dateString: string): string => {
 };
 
 function ResumeManager({ onNewResume }: ResumeManagerProps) {
-  const { formData, sections, resumeName, setResumeName, setFormData, setSections, selectedTemplate } = useResume();
+  const { formData, sections, resumeName, setResumeName, setFormData, setSections, selectedTemplate, currentResumeId, setCurrentResumeId } = useResume();
   const [isEditingName, setIsEditingName] = useState(false);
   const [tempName, setTempName] = useState(resumeName);
   const [savedResumes, setSavedResumes] = useState(getSavedResumes());
@@ -60,6 +60,8 @@ function ResumeManager({ onNewResume }: ResumeManagerProps) {
 
   useEffect(() => {
     setTempName(resumeName);
+    // Refresh saved resumes list when resume name changes (e.g., after loading a different resume)
+    setSavedResumes(getSavedResumes());
   }, [resumeName]);
 
   useEffect(() => {
@@ -86,6 +88,12 @@ function ResumeManager({ onNewResume }: ResumeManagerProps) {
     const trimmedName = tempName.trim();
     if (trimmedName && trimmedName !== resumeName) {
       setResumeName(trimmedName);
+      // If we have a currentResumeId, update the saved resume's name
+      if (currentResumeId) {
+        renameResumeCopy(currentResumeId, trimmedName);
+        // Refresh the saved resumes list to reflect the change
+        setSavedResumes(getSavedResumes());
+      }
     }
     setIsEditingName(false);
   };
@@ -120,14 +128,21 @@ function ResumeManager({ onNewResume }: ResumeManagerProps) {
       newName = `${baseName} (${copyNumber})`;
     }
     
-    // Save the copy
-    const resumeId = saveResumeCopy({ formData, sections, templateId: selectedTemplate.id }, newName);
-    if (resumeId) {
-      // Immediately switch to the new copy
-      setResumeName(newName);
-      setSavedResumes(getSavedResumes());
-      toast.success(`Saved as copy: ${newName}`);
-    }
+    // Create a new resume ID for the copy
+    const newResumeId = crypto.randomUUID();
+    
+    // Save the copy with new ID using updateOrCreateResumeCopy
+    updateOrCreateResumeCopy(
+      newResumeId, 
+      { formData, sections, templateId: selectedTemplate.id, currentResumeId: newResumeId }, 
+      newName
+    );
+    
+    // Switch to the new copy - this will trigger auto-save but it will just update the existing entry
+    setResumeName(newName);
+    setCurrentResumeId(newResumeId);
+    setSavedResumes(getSavedResumes());
+    toast.success(`Saved as copy: ${newName}`);
   };
 
   const handleLoadResume = (resumeId: string) => {
@@ -141,6 +156,8 @@ function ResumeManager({ onNewResume }: ResumeManagerProps) {
         if (savedCopy) {
           setResumeName(savedCopy.name);
         }
+        // Set the currentResumeId to track which resume is loaded
+        setCurrentResumeId(resumeId);
         setIsOpenDialogOpen(false);
       }
     }
@@ -182,7 +199,7 @@ function ResumeManager({ onNewResume }: ResumeManagerProps) {
   };
 
   const toggleSelectAll = () => {
-    const selectableResumes = savedResumes.filter(r => r.name !== resumeName);
+    const selectableResumes = savedResumes.filter(r => r.id !== currentResumeId);
     if (selectedResumeIds.size === selectableResumes.length) {
       setSelectedResumeIds(new Set());
     } else {
@@ -258,7 +275,7 @@ function ResumeManager({ onNewResume }: ResumeManagerProps) {
               {savedResumes.length > 0 ? (
                 <>
                   {savedResumes.slice(0, 5).map((resume) => {
-                    const isCurrent = resume.name === resumeName;
+                    const isCurrent = resume.id === currentResumeId;
                     return (
                       <div key={resume.id} className="group/item">
                         <DropdownMenuItem
@@ -309,11 +326,11 @@ function ResumeManager({ onNewResume }: ResumeManagerProps) {
                 <div className="flex items-center space-x-2">
                   <label className="text-sm font-medium">
                     <Checkbox
-                      checked={savedResumes.filter(r => r.name !== resumeName).length > 0 && 
-                               selectedResumeIds.size === savedResumes.filter(r => r.name !== resumeName).length}
+                      checked={savedResumes.filter(r => r.id !== currentResumeId).length > 0 && 
+                               selectedResumeIds.size === savedResumes.filter(r => r.id !== currentResumeId).length}
                       onCheckedChange={() => toggleSelectAll()}
                     />
-                    <span className="ms-2">Select all ({savedResumes.filter(r => r.name !== resumeName).length})</span>
+                    <span className="ms-2">Select all ({savedResumes.filter(r => r.id !== currentResumeId).length})</span>
                   </label>
                 </div>
                 <Button
@@ -331,7 +348,7 @@ function ResumeManager({ onNewResume }: ResumeManagerProps) {
               {savedResumes.length > 0 ? (
                 <div className="space-y-2">
                   {savedResumes.map((resume) => {
-                    const isCurrent = resume.name === resumeName;
+                    const isCurrent = resume.id === currentResumeId;
                     return (
                       <div
                         key={resume.id}

@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { FormData, Section } from '../types';
-import { loadFromStorage, saveToStorage, generateDefaultResumeName } from './StorageService';
+import { loadFromStorage, saveToStorage, generateDefaultResumeName, updateOrCreateResumeCopy } from './StorageService';
 import { TemplateFactory, TemplateInfo } from '@/lib/LaTeX/TemplateFactory';
 
 interface ResumeContextType {
@@ -8,10 +8,12 @@ interface ResumeContextType {
   sections: Section[];
   selectedTemplate: TemplateInfo;
   resumeName: string;
+  currentResumeId?: string;
   setFormData: (data: FormData) => void;
   setSections: (sections: Section[]) => void;
   setSelectedTemplate: (template: TemplateInfo) => void;
   setResumeName: (name: string) => void;
+  setCurrentResumeId: (id: string | undefined) => void;
   handleChange: (section: string, field: string, value: string | string[]) => void;
   handleSectionSelected: (sectionId: string, checked: boolean) => void;
   handleSectionRemoved: (sectionId: string) => void;
@@ -23,7 +25,7 @@ const ResumeContext = createContext<ResumeContextType | undefined>(undefined);
 
 export function ResumeProvider({ children }: { children: ReactNode }) {
   // Load data from localStorage or use initial data
-  const { formData: savedFormData, sections: savedSections, templateId: savedTemplateId, resumeName: savedResumeName } = loadFromStorage();
+  const { formData: savedFormData, sections: savedSections, templateId: savedTemplateId, resumeName: savedResumeName, currentResumeId: savedCurrentResumeId } = loadFromStorage();
 
   const [formData, setFormData] = useState<FormData>(savedFormData);
   const [sections, setSections] = useState<Section[]>(savedSections);
@@ -33,15 +35,26 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   const [resumeName, setResumeName] = useState<string>(
     savedResumeName || generateDefaultResumeName(savedFormData)
   );
+  const [currentResumeId, setCurrentResumeId] = useState<string | undefined>(
+    savedCurrentResumeId || crypto.randomUUID()
+  );
 
   useEffect(() => {
     persistChangesOnChange();
 
     function persistChangesOnChange() {
       const templateId: string = selectedTemplate.id;
-      saveToStorage({ formData, sections, templateId, resumeName });
+      const dataToSave = { formData, sections, templateId, resumeName, currentResumeId };
+      
+      // Save to working storage
+      saveToStorage(dataToSave);
+      
+      // Also save/update in saved copies if we have a currentResumeId
+      if (currentResumeId) {
+        updateOrCreateResumeCopy(currentResumeId, dataToSave, resumeName);
+      }
     }
-  }, [formData, sections, selectedTemplate, resumeName]);
+  }, [formData, sections, selectedTemplate, resumeName, currentResumeId]);
 
   const handleChange = (section: string, field: string, value: string | string[]): void => {
     setFormData(prevData => ({
@@ -114,10 +127,12 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         sections,
         selectedTemplate,
         resumeName,
+        currentResumeId,
         setFormData,
         setSections,
         setSelectedTemplate,
         setResumeName,
+        setCurrentResumeId,
         handleChange,
         handleSectionSelected,
         handleSectionRemoved,
