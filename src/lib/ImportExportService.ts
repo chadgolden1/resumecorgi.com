@@ -1,4 +1,5 @@
 import { FormData, GenericSection } from '../types';
+import { getSavedResumes, loadResumeCopy } from './StorageService';
 
 interface JsonResumeBasics {
   name: string;
@@ -373,4 +374,61 @@ export const importResumeFromJson = async (file: File): Promise<FormData> => {
     reader.onerror = () => reject(new Error('Failed to read resume file'));
     reader.readAsText(file);
   });
+};
+
+interface ExportedResume {
+  id: string;
+  name: string;
+  createdAt: string;
+  lastUpdated: string;
+  templateId?: string;
+  jsonResume: JsonResume;
+}
+
+interface AllResumesExport {
+  version: string;
+  exportDate: string;
+  resumes: ExportedResume[];
+}
+
+/**
+ * Export all saved resumes to a downloadable JSON file
+ */
+export const downloadAllResumesAsJson = (): void => {
+  const savedResumes = getSavedResumes();
+  
+  // Convert each saved resume to the export format
+  const exportedResumes: ExportedResume[] = savedResumes.map(metadata => {
+    const resumeData = loadResumeCopy(metadata.id);
+    if (!resumeData) {
+      throw new Error(`Could not load resume with ID: ${metadata.id}`);
+    }
+    
+    return {
+      id: metadata.id,
+      name: metadata.name,
+      createdAt: metadata.createdAt,
+      lastUpdated: metadata.lastUpdated,
+      templateId: resumeData.templateId,
+      jsonResume: exportToJsonResume(resumeData.formData)
+    };
+  });
+
+  const allResumesExport: AllResumesExport = {
+    version: '1.0.0',
+    exportDate: new Date().toISOString(),
+    resumes: exportedResumes
+  };
+  
+  const jsonString = JSON.stringify(allResumesExport, null, 2);
+  const blob = new Blob([jsonString], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `all-resumes-export-${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }; 

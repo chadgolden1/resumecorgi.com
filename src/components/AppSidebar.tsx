@@ -1,7 +1,7 @@
 import React from "react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarTrigger } from "@/components/ui/sidebar"
 import SortableNav from "./SortableNav";
-import { DownloadCloud, ExternalLink, FileJson, FlaskConical, ListPlus, UploadCloud } from "lucide-react";
+import { DownloadCloud, ExternalLink, FileJson, FlaskConical, ListPlus, UploadCloud, ChevronDown } from "lucide-react";
 import Corgi from "./Corgi";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { ResumeImporter } from "./ResumeImporter";
@@ -9,17 +9,14 @@ import { FormData } from "@/types";
 import { TemplateSwitcher } from "./TemplateSwitcher";
 import { useResume } from '@/lib/ResumeContext';
 import ResumeManager from "./ResumeManager";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 
 interface SidebarProps {
   resetData?: () => void;
   sampleData?: () => void;
   onExport: () => void;
+  onExportAll?: () => void;
   onImportJsonFormData: (formData: FormData) => void;
-}
-
-const exportJson = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>, onExport: () => void) => {
-  e.preventDefault();
-  onExport();
 }
 
 const corgiSize: number = 84;
@@ -28,6 +25,7 @@ function AppSidebar({
   resetData,
   sampleData,
   onExport,
+  onExportAll,
   onImportJsonFormData,
 }: SidebarProps) {
   const { addGenericSection } = useResume();
@@ -103,13 +101,26 @@ function AppSidebar({
           <SidebarGroupLabel>Data</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem key={"menu-export-resume"}>
-                <SidebarMenuButton asChild className="hover:bg-gray-200 dark:hover:bg-zinc-950/70">
-                  <a href={"#"} onClick={(e) => exportJson(e, onExport)}>
-                    <DownloadCloud />
-                    <span>Export</span>
-                  </a>
-                </SidebarMenuButton>
+              <SidebarMenuItem key={"menu-export"}>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <SidebarMenuButton className="hover:bg-gray-200 dark:hover:bg-zinc-950/70 cursor-pointer">
+                      <DownloadCloud />
+                      <span>Export</span>
+                      <ChevronDown className="ml-auto h-4 w-4" />
+                    </SidebarMenuButton>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-60">
+                    <DropdownMenuItem onClick={() => onExport()}>
+                      <FileJson className="mr-2 h-4 w-4" />
+                      Current Resume
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onExportAll?.()}>
+                      <DownloadCloud className="mr-2 h-4 w-4" />
+                      All Resumes
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </SidebarMenuItem>
               <SidebarMenuItem key={"menu-import-resume"}>
                 <Dialog>

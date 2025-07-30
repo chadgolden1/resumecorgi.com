@@ -15,7 +15,7 @@ import { createSectionsFromFormData, initialFormData, sampleFormData } from '@/l
 import { generateDefaultResumeName } from '@/lib/StorageService';
 import Projects from './forms/Projects';
 import GenericSection from './forms/GenericSection';
-import { downloadResumeAsJson } from '@/lib/ImportExportService';
+import { downloadResumeAsJson, downloadAllResumesAsJson } from '@/lib/ImportExportService';
 import { useResume } from '@/lib/ResumeContext';
 import Reference from './forms/Reference';
 
@@ -168,6 +168,7 @@ function Editor() {
           resetData={() => resetToDefaults() }
           sampleData={() => resetToSampleData() }
           onExport={() => downloadResumeAsJson(formData) }
+          onExportAll={() => downloadAllResumesAsJson() }
           onImportJsonFormData={formData => loadImportedJsonResume(formData) }
         />
         <div className="grid lg:grid-cols-12 grid-cols-12 gap-0 w-full h-screen">
