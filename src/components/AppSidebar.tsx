@@ -1,10 +1,11 @@
-import React from "react";
+import { useState } from "react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarTrigger } from "@/components/ui/sidebar"
 import SortableNav from "./SortableNav";
 import { DownloadCloud, ExternalLink, FileJson, FlaskConical, ListPlus, UploadCloud, ChevronDown } from "lucide-react";
 import Corgi from "./Corgi";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { ResumeImporter } from "./ResumeImporter";
+import { AllResumesImporter } from "./AllResumesImporter";
 import { FormData } from "@/types";
 import { TemplateSwitcher } from "./TemplateSwitcher";
 import { useResume } from '@/lib/ResumeContext';
@@ -36,6 +37,16 @@ function AppSidebar({
     }
   };
 
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [resumeManagerKey, setResumeManagerKey] = useState(0);
+  
+  const onImportAllComplete = () => {
+    setImportDialogOpen(false);
+
+    // Force ResumeManager to refresh by changing its key
+    setResumeManagerKey(prev => prev + 1);
+  };
+
   return (
     <Sidebar
       className="
@@ -60,7 +71,7 @@ function AppSidebar({
         <SidebarGroup>
           <SidebarGroupLabel className="text-gray-700 dark:text-zinc-300">Resume</SidebarGroupLabel>
           <SidebarGroupContent className="px-2">
-            <ResumeManager onNewResume={handleNewResume} />
+            <ResumeManager key={resumeManagerKey} onNewResume={handleNewResume} />
           </SidebarGroupContent>
         </SidebarGroup>
         <SidebarGroup className="block lg:hidden py-0">
@@ -117,39 +128,69 @@ function AppSidebar({
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => onExportAll?.()}>
                       <DownloadCloud className="mr-2 h-4 w-4" />
-                      All Resumes
+                      All Resumes as Collection
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </SidebarMenuItem>
-              <SidebarMenuItem key={"menu-import-resume"}>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <SidebarMenuButton asChild className="hover:bg-gray-200 dark:hover:bg-zinc-950/70">
-                      <a href={"#"}>
-                        <UploadCloud />
-                        <span>Import</span>
-                      </a>
+              <SidebarMenuItem key={"menu-import"}>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <SidebarMenuButton className="hover:bg-gray-200 dark:hover:bg-zinc-950/70 cursor-pointer">
+                      <UploadCloud />
+                      <span>Import</span>
+                      <ChevronDown className="ml-auto h-4 w-4" />
                     </SidebarMenuButton>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>
-                        <FileJson className="pb-1 inline me-1 size-6" strokeWidth={1.334} />
-                        Import Resume
-                      </DialogTitle>
-                      <DialogDescription>
-                        Import a file containing your resume content using the JSON Resume format.
-                        See
-                        <a href="https://jsonresume.org/schema" target="_blank" className="ms-1.5 me-0.5 text-purple-800 dark:text-purple-400 font-bold hover:underline">
-                          JSON Resume <ExternalLink className="inline size-4 pb-1" />
-                        </a> 
-                        for more details.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <ResumeImporter onComplete={onImportJsonFormData} />
-                  </DialogContent>
-                </Dialog>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-60">
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                          <FileJson className="mr-2 h-4 w-4" />
+                          Single
+                        </DropdownMenuItem>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>
+                            <FileJson className="pb-1 inline me-1 size-6" strokeWidth={1.334} />
+                            Import Resume
+                          </DialogTitle>
+                          <DialogDescription>
+                            Import a file containing your resume content using the JSON Resume format.
+                            See
+                            <a href="https://jsonresume.org/schema" target="_blank" className="ms-1.5 me-0.5 text-purple-800 dark:text-purple-400 font-bold hover:underline">
+                              JSON Resume <ExternalLink className="inline size-4 pb-1" />
+                            </a> 
+                            for more details.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <ResumeImporter onComplete={onImportJsonFormData} />
+                      </DialogContent>
+                    </Dialog>
+                    <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+                      <DialogTrigger asChild>
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                          <UploadCloud className="mr-2 h-4 w-4" />
+                          Collection
+                        </DropdownMenuItem>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>
+                            <UploadCloud className="pb-1 inline me-1 size-6" strokeWidth={1.334} />
+                            Import All Resumes
+                          </DialogTitle>
+                          <DialogDescription>
+                            Import a file containing multiple resumes exported using the "Export All" feature.
+                            Existing resumes with the same name will be kept and imported ones will be renamed.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <AllResumesImporter onComplete={onImportAllComplete} />
+                      </DialogContent>
+                    </Dialog>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </SidebarMenuItem>
               <SidebarMenuItem key={"menu-sample-resume"}>
                 <SidebarMenuButton asChild className="hover:bg-gray-200 dark:hover:bg-zinc-950/70">

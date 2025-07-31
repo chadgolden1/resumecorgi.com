@@ -14,7 +14,6 @@ export const ResumeImporter = ({ onComplete }: ResumeImporterProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
-  const [uploadedFormData, setUploadedFormData] = useState<FormData | null>(null);
   const [uploadComplete, setUploadComplete] = useState<boolean>(false);
   
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -26,8 +25,10 @@ export const ResumeImporter = ({ onComplete }: ResumeImporterProps) => {
     
     try {
       const formData = await importResumeFromJson(file);
-      setUploadedFormData(formData);
       console.log('Resume imported successfully', formData);
+      // Immediately complete the import without confirmation
+      onComplete(formData);
+      setUploadComplete(true);
       setSuccess(true);
     } catch (err) {
       setError((err as Error).message);
@@ -53,18 +54,6 @@ export const ResumeImporter = ({ onComplete }: ResumeImporterProps) => {
       {error && 
         <>
           <Alert title="Error" description="There was an issue uploading your resume content. Please ensure the content conforms to the JSON resume format and try again." variant="danger" />
-        </>
-      }
-      {!isLoading && !uploadComplete && success && 
-        <>
-          <Alert title="Confirm Upload" description="Your resume was successfully uploaded. Please confirm to overwrite your current edits with the uploaded resume content." variant="info" />
-          <div className="pt-1">
-            <Button 
-              text="Confirm Upload" 
-              theme="interaction" 
-              className="mb-0 text-sm"
-              onClick={() => { onComplete(uploadedFormData!); setUploadComplete(true); }} />
-          </div>
         </>
       }
       {uploadComplete &&

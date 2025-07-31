@@ -146,12 +146,15 @@ function Editor() {
   };
 
   const loadImportedJsonResume = (importedFormData: FormData) => {
-    if (!window.confirm('Loading imported resume data will overwrite any edits you have made. This cannot be undone. Would you like to proceed?')) {
-      return;
-    }
-
+    // Create a new resume with the imported data
+    const newResumeId = crypto.randomUUID();
+    const newResumeName = generateDefaultResumeName(importedFormData);
+    
+    // Set all the state to switch to this new resume
     setFormData(importedFormData);
     setSections(createSectionsFromFormData(importedFormData));
+    setCurrentResumeId(newResumeId);
+    setResumeName(newResumeName);
   };
 
   const sortedSections = [...sections].sort((a, b) => a.sortOrder - b.sortOrder);

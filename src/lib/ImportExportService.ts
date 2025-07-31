@@ -1,5 +1,5 @@
 import { FormData, GenericSection } from '../types';
-import { getSavedResumes, loadResumeCopy } from './StorageService';
+import { getSavedResumes, loadResumeCopy, updateOrCreateResumeCopy } from './StorageService';
 
 interface JsonResumeBasics {
   name: string;
@@ -431,4 +431,88 @@ export const downloadAllResumesAsJson = (): void => {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+};
+
+interface ImportResult {
+  imported: number;
+  skipped: number;
+  renamed: number;
+}
+
+/**
+ * Import all resumes from a JSON file using suffix strategy for conflicts
+ * @returns Promise that resolves with import statistics
+ */
+export const importAllResumesFromJson = async (file: File): Promise<ImportResult> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    
+    reader.onload = (e) => {
+      try {
+        const importData: AllResumesExport = JSON.parse(e.target?.result as string);
+        
+        if (!importData.resumes || !Array.isArray(importData.resumes)) {
+          throw new Error('Invalid import file format');
+        }
+        
+        const existingResumes = getSavedResumes();
+        const existingNames = new Set(existingResumes.map(r => r.name));
+        
+        let imported = 0;
+        let skipped = 0;
+        let renamed = 0;
+        
+        importData.resumes.forEach(exportedResume => {
+          try {
+            // Import the form data from JSON Resume format
+            const formData = importFromJsonResume(exportedResume.jsonResume);
+            let finalName = exportedResume.name;
+            
+            // Check for name conflicts
+            if (existingNames.has(finalName)) {
+              // Find a unique name with suffix
+              let suffix = 1;
+              let newName = `${finalName} (imported)`;
+              while (existingNames.has(newName)) {
+                suffix++;
+                newName = `${finalName} (imported ${suffix})`;
+              }
+              finalName = newName;
+              renamed++;
+            }
+            
+            // Create the resume with a new ID (don't reuse the exported ID to avoid conflicts)
+            const newId = crypto.randomUUID();
+            updateOrCreateResumeCopy(
+              newId,
+              {
+                formData,
+                sections: [], // This will be populated by the app when the resume is loaded
+                templateId: exportedResume.templateId,
+                currentResumeId: newId
+              },
+              finalName
+            );
+            
+            existingNames.add(finalName);
+            imported++;
+          } catch (error) {
+            console.error(`Failed to import resume "${exportedResume.name}":`, error);
+            skipped++;
+          }
+        });
+        
+        resolve({ imported, skipped, renamed });
+      } catch (error) {
+        if (error instanceof Error) {
+          reject(new Error(error.message));
+        } else {
+          reject(new Error('Failed to parse import file'));
+        }
+      }
+    };
+    
+    reader.onerror = () => reject(new Error('Failed to read import file'));
+    reader.readAsText(file);
+  });
 }; 
