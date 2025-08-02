@@ -8,7 +8,7 @@ interface JobInputProps {
 }
 
 const JobURLInput: React.FC<JobInputProps> = ({ onJobSubmit, disabled = false }) => {
-  const [inputMode, setInputMode] = useState<'url' | 'text'>('text');
+  const [inputMode] = useState<'url' | 'text'>('text');
   const [jobUrl, setJobUrl] = useState('');
   const [jobDescription, setJobDescription] = useState('');
   const [error, setError] = useState('');

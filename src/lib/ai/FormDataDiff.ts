@@ -36,6 +36,7 @@ export class FormDataDiff {
     return changes;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static compareExperience(original: any[], modified: any[]): ChangeRecord[] {
     const changes: ChangeRecord[] = [];
     const maxLength = Math.max(original.length, modified.length);
@@ -86,6 +87,7 @@ export class FormDataDiff {
     return changes;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static compareSkills(original: any[], modified: any[]): ChangeRecord[] {
     const changes: ChangeRecord[] = [];
 
@@ -125,6 +127,7 @@ export class FormDataDiff {
     return changes;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static compareProjects(original: any[], modified: any[]): ChangeRecord[] {
     const changes: ChangeRecord[] = [];
     const maxLength = Math.max(original.length, modified.length);
@@ -175,6 +178,7 @@ export class FormDataDiff {
     return changes;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static compareEducation(original: any[], modified: any[]): ChangeRecord[] {
     const changes: ChangeRecord[] = [];
     const maxLength = Math.max(original.length, modified.length);
@@ -201,6 +205,7 @@ export class FormDataDiff {
     return changes;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static comparePersonalInfo(original: any, modified: any): ChangeRecord[] {
     const changes: ChangeRecord[] = [];
 

@@ -163,7 +163,7 @@ export class AIService {
       ]);
 
       return !!response;
-    } catch (error) {
+    } catch {
       // Clear the invalid key
       SecureStorage.clearAPIKey();
       return false;

@@ -41,7 +41,7 @@ const APIKeyManager: React.FC<APIKeyManagerProps> = ({ onKeyConfigured }) => {
       } else {
         setError('Invalid API key. Please check your key and try again.');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to validate API key. Please try again.');
     } finally {
       setIsValidating(false);
