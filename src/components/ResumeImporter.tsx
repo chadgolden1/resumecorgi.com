@@ -13,7 +13,7 @@ interface ResumeImporterProps {
 export const ResumeImporter = ({ onComplete }: ResumeImporterProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<boolean>(false);
+  const [, setSuccess] = useState<boolean>(false);
   const [uploadComplete, setUploadComplete] = useState<boolean>(false);
   
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
