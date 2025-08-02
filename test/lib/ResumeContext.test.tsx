@@ -3,9 +3,21 @@ import { ResumeProvider, useResume } from '@/lib/ResumeContext';
 import { loadFromStorage, saveToStorage } from '@/lib/StorageService';
 import { TemplateFactory } from '@/lib/LaTeX/TemplateFactory';
 
+// Mock crypto.randomUUID which is not available in test environment
+beforeAll(() => {
+  Object.defineProperty(global, 'crypto', {
+    value: {
+      randomUUID: jest.fn(() => 'test-uuid-123'),
+    },
+    writable: true,
+  });
+});
+
 jest.mock('@/lib/StorageService', () => ({
   loadFromStorage: jest.fn(),
   saveToStorage: jest.fn(),
+  generateDefaultResumeName: jest.fn(() => 'test-resume-123456'),
+  updateOrCreateResumeCopy: jest.fn(),
 }));
 
 jest.mock('@/lib/LaTeX/TemplateFactory', () => ({

@@ -16,6 +16,7 @@ function Toolbar({
   onDownloadPdf,
   onDownloadLaTeX
 }: ToolbarProps) {
+
   const buttonCss =
     `transition-colors
     px-2 py-1.5

@@ -12,9 +12,10 @@ import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/AppSidebar';
 import Navbar from '@/components/Navbar';
 import { createSectionsFromFormData, initialFormData, sampleFormData } from '@/lib/DataInitializer';
+import { generateDefaultResumeName } from '@/lib/StorageService';
 import Projects from './forms/Projects';
 import GenericSection from './forms/GenericSection';
-import { downloadResumeAsJson } from '@/lib/ImportExportService';
+import { downloadResumeAsJson, downloadAllResumesAsJson } from '@/lib/ImportExportService';
 import { useResume } from '@/lib/ResumeContext';
 import Reference from './forms/Reference';
 
@@ -34,6 +35,8 @@ function Editor() {
     sections,
     setFormData,
     setSections,
+    setCurrentResumeId,
+    setResumeName,
   } = useResume();
 
   const sectionRenderMapping = useMemo<SectionRenderItem[]>(() => [
@@ -125,26 +128,33 @@ function Editor() {
       return;
     }
 
+    const newResumeId = crypto.randomUUID();
+    const newResumeName = generateDefaultResumeName(initialFormData);
+    
     setFormData(initialFormData);
     setSections(createSectionsFromFormData(initialFormData));
+    setCurrentResumeId(newResumeId);
+    setResumeName(newResumeName);
   };
 
   const resetToSampleData = () => {
     if (!window.confirm('Loading sample data will overwrite any edits you have made. This cannot be undone. Would you like to proceed?')) {
       return;
     }
-
     setFormData(sampleFormData);
     setSections(createSectionsFromFormData(sampleFormData));
   };
 
   const loadImportedJsonResume = (importedFormData: FormData) => {
-    if (!window.confirm('Loading imported resume data will overwrite any edits you have made. This cannot be undone. Would you like to proceed?')) {
-      return;
-    }
-
+    // Create a new resume with the imported data
+    const newResumeId = crypto.randomUUID();
+    const newResumeName = generateDefaultResumeName(importedFormData);
+    
+    // Set all the state to switch to this new resume
     setFormData(importedFormData);
     setSections(createSectionsFromFormData(importedFormData));
+    setCurrentResumeId(newResumeId);
+    setResumeName(newResumeName);
   };
 
   const sortedSections = [...sections].sort((a, b) => a.sortOrder - b.sortOrder);
@@ -161,6 +171,7 @@ function Editor() {
           resetData={() => resetToDefaults() }
           sampleData={() => resetToSampleData() }
           onExport={() => downloadResumeAsJson(formData) }
+          onExportAll={() => downloadAllResumesAsJson() }
           onImportJsonFormData={formData => loadImportedJsonResume(formData) }
         />
         <div className="grid lg:grid-cols-12 grid-cols-12 gap-0 w-full h-screen">
