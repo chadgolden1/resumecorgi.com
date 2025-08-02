@@ -5,6 +5,7 @@ import Editor from '@/views/Editor'
 import Button from './components/Button'
 import Navbar from './components/Navbar'
 import { ResumeProvider } from '@/lib/ResumeContext'
+import { FeatureFlagProvider } from '@/lib/FeatureFlagContext'
 
 function App() {
   const [viewState, setViewState] = useState('landing')
@@ -14,8 +15,9 @@ function App() {
   };
 
   return (
-    <ResumeProvider>
-      <div className={"bg-gray-50 dark:bg-zinc-900 overflow-hidden"}>
+    <FeatureFlagProvider>
+      <ResumeProvider>
+        <div className={"bg-gray-50 dark:bg-zinc-900 overflow-hidden"}>
         <div className={"antialiased lg:subpixel-antialiased relative flex flex-col justify-center items-center min-h-screen mx-auto xl:px-0"}>
 
           {viewState === 'landing' && (
@@ -41,7 +43,8 @@ function App() {
           
         </div>
       </div>
-    </ResumeProvider>
+      </ResumeProvider>
+    </FeatureFlagProvider>
   )
 }
 

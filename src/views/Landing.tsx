@@ -1,12 +1,16 @@
-import Button from '../components/Button';
 import Corgi from '../components/Corgi';
 import Footer from '../components/Footer';
+import AiButton from '../components/AiButton';
+import { useFeatureFlags } from '@/lib/FeatureFlagContext';
+import Button from '@/components/Button';
 
 interface LandingProps {
   onStart: () => void;
 }
 
 function Landing({ onStart }: LandingProps) {
+  const { isEnabled } = useFeatureFlags();
+
   return (
     <>
       <div className="w-full text-center">
@@ -23,9 +27,15 @@ function Landing({ onStart }: LandingProps) {
                 It's free, optimized for scanning software,
                 and secure. Your data never leaves your device.
               </p>
-              <Button onClick={onStart} text="Start Building" className="px-5 py-2" />
+              {isEnabled('royal-assistant') && (
+                <AiButton onClick={onStart} className="ml-2.5" />
+              )}
+              {!isEnabled('royal-assistant') && (
+                <Button onClick={onStart} text="Start Building" className="px-5 py-2" />
+              )}
             </div>
           </div>
+          
           <div className="hidden /lg:block mt-4 lg:mt-0 lg:me-auto">
             <Corgi size={172} />
           </div>

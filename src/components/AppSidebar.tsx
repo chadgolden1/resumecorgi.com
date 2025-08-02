@@ -11,6 +11,9 @@ import { TemplateSwitcher } from "./TemplateSwitcher";
 import { useResume } from '@/lib/ResumeContext';
 import ResumeManager from "./ResumeManager";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
+import AiButton from "./AiButton";
+import AITailorModal from "./ai/AITailorModal";
+import { useFeatureFlags } from "@/lib/FeatureFlagContext";
 
 interface SidebarProps {
   resetData?: () => void;
@@ -46,6 +49,8 @@ function AppSidebar({
     // Force ResumeManager to refresh by changing its key
     setResumeManagerKey(prev => prev + 1);
   };
+  const [aiModalOpen, setAiModalOpen] = useState(false);
+  const { isEnabled } = useFeatureFlags();
 
   return (
     <Sidebar
@@ -108,6 +113,23 @@ function AppSidebar({
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {isEnabled('royal-assistant') && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-gray-700 dark:text-zinc-300">My Royal Assistant</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <div className="px-2 py-2">
+                <AiButton 
+                  onClick={() => setAiModalOpen(true)}
+                  className="w-full"
+                >
+                  Tailor with Smart Match
+                </AiButton>
+              </div>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
         <SidebarGroup>
           <SidebarGroupLabel>Data</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -221,6 +243,11 @@ function AppSidebar({
           Copyright &copy; 2025 Chad Golden
         </div>
       </SidebarFooter>
+      
+      <AITailorModal 
+        open={aiModalOpen} 
+        onOpenChange={setAiModalOpen} 
+      />
     </Sidebar>
   )
 }
