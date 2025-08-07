@@ -1,12 +1,12 @@
 import { FormData } from '../../types';
-import { AIFormData, AIExperience, AIEducation, AIProject, AISkill } from '../../types/ai-data';
+import { AIFormData } from '../../types/ai-data';
 
 export class FormDataConverter {
   /**
    * Converts FormData (with HTML) to AIFormData (with arrays)
    */
   static toAIFormat(formData: FormData): AIFormData {
-    return {
+    const aiData: AIFormData = {
       personalInfo: formData.personalInfo,
       experience: formData.experience.map(exp => ({
         ...exp,
@@ -20,18 +20,34 @@ export class FormDataConverter {
         category: skill.category,
         skills: this.parseSkillList(skill.skillList)
       })),
-      projects: formData.projects.map(proj => ({
+      projects: []
+    };
+
+    // Only include projects if they exist and are not empty
+    if (formData.projects && formData.projects.length > 0) {
+      const mappedProjects = formData.projects.map(proj => ({
         ...proj,
         highlights: this.htmlToArray(proj.highlights)
-      }))
-    };
+      }));
+      
+      // Only include projects if at least one has meaningful content
+      const hasContent = mappedProjects.some(proj => 
+        proj.name || proj.description || (proj.highlights && proj.highlights.length > 0)
+      );
+      
+      if (hasContent) {
+        aiData.projects = mappedProjects;
+      }
+    }
+
+    return aiData;
   }
 
   /**
    * Converts AIFormData (with arrays) back to FormData (with HTML)
    */
   static fromAIFormat(aiData: AIFormData, originalFormData: FormData): FormData {
-    return {
+    const result: FormData = {
       ...originalFormData, // Preserve any fields not handled by AI
       personalInfo: aiData.personalInfo,
       experience: aiData.experience.map(exp => ({
@@ -45,12 +61,22 @@ export class FormDataConverter {
       skills: aiData.skills.map(skill => ({
         category: skill.category,
         skillList: skill.skills.join(', ')
-      })),
-      projects: aiData.projects.map(proj => ({
-        ...proj,
-        highlights: this.arrayToHtml(proj.highlights)
       }))
     };
+
+    // Only update projects if they were included in the AI response
+    // If projects weren't sent to AI (empty/hidden), preserve original
+    if (aiData.projects && aiData.projects.length > 0) {
+      result.projects = aiData.projects.map(proj => ({
+        ...proj,
+        highlights: this.arrayToHtml(proj.highlights)
+      }));
+    } else {
+      // Preserve original projects if AI didn't process them
+      result.projects = originalFormData.projects;
+    }
+
+    return result;
   }
 
   /**

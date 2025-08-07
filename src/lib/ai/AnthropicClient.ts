@@ -158,7 +158,8 @@ export class AnthropicClient {
         - CRITICAL: Maintain array format for accomplishments, skills, and highlights fields
         - Accomplishments are provided as an array of strings, maintain this format
         - Skills are provided as an array in the "skills" field
-        - Project highlights are provided as an array of strings
+        - If projects are provided: Project highlights are provided as an array of strings
+        - If projects array is empty or not included, DO NOT generate or add any projects
         - Focus on the target sections: ${targetSections.join(', ')}
         - Maintain truthfulness while optimizing presentation
 
@@ -176,6 +177,8 @@ export class AnthropicClient {
         - Return the COMPLETE resume object with ALL sections and fields
         - Maintain the exact same structure as the input AIFormData
         - Keep array format for accomplishments, skills, and highlights
+        - If the input has an empty projects array, return an empty projects array
+        - Do NOT add projects if none were provided in the input
         - Do NOT include a "changes" array - just return the tailored resume
         - The response must be valid JSON only, no markdown formatting`
       }
