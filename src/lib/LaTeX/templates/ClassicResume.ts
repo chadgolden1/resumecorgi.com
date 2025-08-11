@@ -19,7 +19,7 @@ export class ClassicResume extends TemplateAdapter {
 \\usepackage{tabularx} % for making tables with fixed width columns
 \\usepackage{array} % tabularx requires this
 \\usepackage[dvipsnames]{xcolor} % for coloring text
-\\definecolor{primaryColor}{RGB}{38, 74, 142}
+\\definecolor{primaryColor}{RGB}{36, 56, 171}
 \\usepackage{enumitem} % for customizing lists
 \\usepackage{fontawesome5} % for using icons
 \\usepackage{amsmath} % for math
@@ -50,7 +50,9 @@ export class ClassicResume extends TemplateAdapter {
     \\usepackage{lmodern}
 \\fi
 
-\\usepackage[default, type1]{sourcesanspro} 
+\\usepackage[scale=0.925]{tgheros}
+%\\usepackage{lmodern}
+\\renewcommand{\\familydefault}{\\sfdefault}
 
 % Some settings:
 \\AtBeginEnvironment{adjustwidth}{\\partopsep0pt} % remove space before adjustwidth environment
@@ -176,7 +178,7 @@ export class ClassicResume extends TemplateAdapter {
     \\sbox\\ANDbox{}
 
     \\begin{header}
-        \\fontsize{30 pt}{30 pt}
+        \\fontsize{28 pt}{28 pt}
         \\textbf{${escapedName}}
 
         \\vspace{0cm}
@@ -285,7 +287,7 @@ export class ClassicResume extends TemplateAdapter {
         \\begin{twocolentry}{
             ${locationAndDateRange}
         }
-            \\textbf{${this.utils.escapeLaTeX(company)}}, ${this.utils.escapeLaTeX(title)}
+            \\textbf{${this.utils.escapeLaTeX(title)}}, ${this.utils.escapeLaTeX(company)}
             \\begin{highlights}
 ${accomplishments || "\\item "}
             \\end{highlights}
